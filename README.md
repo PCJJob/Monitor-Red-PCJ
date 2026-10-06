@@ -82,8 +82,8 @@ no trae fichero `.sln`: se trabaja directamente con `src/MonitorRedPCJ/MonitorRe
 No hay binarios en el repositorio. La vía normal es compilar:
 
 ```powershell
-git clone <URL de este repositorio en GitHub>
-cd <la carpeta que haya creado el clone>
+git clone https://github.com/PCJJob/Monitor-Red-PCJ.git
+cd Monitor-Red-PCJ
 powershell -ExecutionPolicy Bypass -File build.ps1
 ```
 
@@ -320,8 +320,8 @@ Windows.
 
 ## Reportar problemas
 
-Usa la pestaña **Issues** de este repositorio de GitHub. No hay dirección de correo ni otro canal
-oficial.
+Usa la pestaña [**Issues**](https://github.com/PCJJob/Monitor-Red-PCJ/issues) de este repositorio
+de GitHub. No hay dirección de correo ni otro canal oficial.
 
 Ayuda mucho si incluyes: la versión (menú de Ajustes → Acerca de, o `<Version>` en el
 `.csproj`), Windows 10 u 11, qué esperabas y qué ha pasado, y si el problema es del firewall, la
