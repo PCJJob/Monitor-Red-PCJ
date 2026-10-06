@@ -1,0 +1,44 @@
+<UserControl x:Class="MonitorRedPCJ.Views.ScannerView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DockPanel>
+        <Border DockPanel.Dock="Top" Style="{StaticResource Card}" Margin="0,0,0,14">
+            <Grid>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock x:Name="TxtNetwork" Text="Red" FontWeight="SemiBold" FontSize="14"
+                               Foreground="{DynamicResource B.Text}" VerticalAlignment="Center"/>
+                    <Button x:Name="BtnScan" Content="Escanear" Style="{StaticResource PrimaryButton}"
+                            Margin="18,0,0,0" Click="OnScan"/>
+                    <TextBlock x:Name="TxtScanned" Text="" FontSize="12" Foreground="{DynamicResource B.TextDim}"
+                               VerticalAlignment="Center" Margin="14,0,0,0"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <TextBlock Text="Auto-escaneo" FontSize="12" Foreground="{DynamicResource B.TextDim}"
+                               VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <CheckBox x:Name="ChkAuto" VerticalAlignment="Center" Checked="OnAuto" Unchecked="OnAuto"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Border Style="{StaticResource Card}">
+            <ListView x:Name="DevicesList" BorderThickness="0">
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Width="34">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Ellipse Width="9" Height="9" Fill="{DynamicResource B.Green}"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn Header="Nombre" Width="200" DisplayMemberBinding="{Binding Name}"/>
+                        <GridViewColumn Header="Descripción" Width="200" DisplayMemberBinding="{Binding Description}"/>
+                        <GridViewColumn Header="IP" Width="130" DisplayMemberBinding="{Binding Ip}"/>
+                        <GridViewColumn Header="MAC" Width="150" DisplayMemberBinding="{Binding Mac}"/>
+                        <GridViewColumn Header="Visto por última vez" Width="170" DisplayMemberBinding="{Binding Seen}"/>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+        </Border>
+    </DockPanel>
+</UserControl>

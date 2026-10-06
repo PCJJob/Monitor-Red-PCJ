@@ -1,0 +1,257 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
+    <!-- ============================================================
+         PALETA «AURORA» — la que había hasta ahora, token por token.
+         ============================================================
+         Es la misma paleta "Aurora PCJ" que estaba incrustada en Theme.xaml,
+         pero partida en dos capas: esta solo dice COLORES, y Theme.xaml solo
+         dice COMO SE COLOCAN. Así se puede cambiar el aspecto entero de la
+         aplicación cambiando este archivo por otro del mismo nombre de clave,
+         sin tocar ni una línea de maquetación.
+
+         Las claves viejas (B.Text, B.Edge, F.Main…) se conservan todas: las
+         vistas que ya existían siguen funcionando igual. Las nuevas son
+         semánticas (B.Hover, B.Field, B.BarTrack…) y sustituyen a los colores
+         que estaban escritos a mano sueltos por las plantillas. -->
+
+    <!-- ======= Fondos en capas ======= -->
+    <Color x:Key="C.Bg">#EDF3F8</Color>
+    <Color x:Key="C.BgDeep">#E3ECF4</Color>
+    <Color x:Key="C.Panel">#FFFFFF</Color>
+    <Color x:Key="C.PanelAlt">#F5F9FC</Color>
+    <Color x:Key="C.Raised">#F7FAFD</Color>
+    <Color x:Key="C.Header">#13232F</Color>
+
+    <!-- ======= Texto ======= -->
+    <Color x:Key="C.Text">#16242E</Color>
+    <Color x:Key="C.TextDim">#677986</Color>
+    <Color x:Key="C.TextFaint">#A6B6C2</Color>
+    <Color x:Key="C.HeaderText">#B9C8D4</Color>
+
+    <!-- ======= Acentos y estados ======= -->
+    <Color x:Key="C.Accent">#0FA3A3</Color>
+    <Color x:Key="C.Teal">#0FA3A3</Color>
+    <Color x:Key="C.Indigo">#4361EE</Color>
+    <Color x:Key="C.Amber">#F4A62A</Color>
+    <Color x:Key="C.Coral">#EF6461</Color>
+    <Color x:Key="C.Green">#2FB380</Color>
+    <Color x:Key="C.Slate">#55697A</Color>
+    <Color x:Key="C.OnAccent">#FFFFFF</Color>
+
+    <!-- ======= Líneas y estados del ratón ======= -->
+    <Color x:Key="C.Line">#DCE6EE</Color>
+    <Color x:Key="C.Edge">#C4D4E1</Color>
+    <Color x:Key="C.Divider">#EAF0F5</Color>
+    <Color x:Key="C.Hover">#F3F8FC</Color>
+    <Color x:Key="C.HoverRow">#F3F8FC</Color>
+    <Color x:Key="C.Pressed">#E4EEF5</Color>
+    <Color x:Key="C.Selected">#EAF4F4</Color>
+    <Color x:Key="C.SelectedEdge">#9FD9D6</Color>
+
+    <!-- ======= Campos de escritura y buscadores ======= -->
+    <Color x:Key="C.Field">#F7FAFD</Color>
+    <Color x:Key="C.FieldEdge">#C4D4E1</Color>
+    <Color x:Key="C.FieldFocus">#0FA3A3</Color>
+
+    <!-- ======= Barra de PESO ======= -->
+    <Color x:Key="C.BarTrack">#E4EBF2</Color>
+    <Color x:Key="C.BarIdle">#C6D5E2</Color>
+
+    <!-- ======= Tarjetas de estado (chips) ======= -->
+    <Color x:Key="C.ChipOkBg">#E3F6EC</Color>
+    <Color x:Key="C.ChipOkFg">#1E8E63</Color>
+    <Color x:Key="C.ChipBadBg">#FDE7E6</Color>
+    <Color x:Key="C.ChipBadFg">#C0392B</Color>
+    <Color x:Key="C.ChipBadPress">#F7DCD8</Color>
+    <Color x:Key="C.ChipWarnBg">#FFF4E0</Color>
+    <Color x:Key="C.ChipWarnFg">#B4770E</Color>
+    <Color x:Key="C.ChipInfoBg">#E8EDFD</Color>
+    <Color x:Key="C.ChipInfoFg">#3450C8</Color>
+    <Color x:Key="C.ChipNeutralBg">#EEF3F8</Color>
+    <Color x:Key="C.ChipNeutralFg">#677986</Color>
+
+    <!-- ======= Banda oscura de Protección ======= -->
+    <Color x:Key="C.Banner1">#12212D</Color>
+    <Color x:Key="C.Banner2">#1B3A4C</Color>
+    <Color x:Key="C.Banner3">#134B57</Color>
+    <Color x:Key="C.BannerEdge">#0E3240</Color>
+    <Color x:Key="C.BannerText">#FFFFFF</Color>
+    <Color x:Key="C.BannerTextDim">#B9CBD8</Color>
+    <Color x:Key="C.BannerTextFaint">#9FB6C6</Color>
+    <Color x:Key="C.BannerChip">#26FFFFFF</Color>
+    <Color x:Key="C.BannerChipEdge">#40FFFFFF</Color>
+    <Color x:Key="C.BannerDivider">#2A4A5C</Color>
+
+    <!-- ======= Menús flotantes ======= -->
+    <Color x:Key="C.MenuBg">#FFFFFF</Color>
+    <Color x:Key="C.MenuEdge">#D5E2EC</Color>
+    <Color x:Key="C.MenuHover">#EAF4F4</Color>
+    <Color x:Key="C.MenuText">#16242E</Color>
+    <Color x:Key="C.MenuTextDim">#7B8C99</Color>
+
+    <!-- ======= Barra de desplazamiento ======= -->
+    <Color x:Key="C.ScrollBg">#00FFFFFF</Color>
+    <Color x:Key="C.ScrollThumb">#C6D5E2</Color>
+    <Color x:Key="C.ScrollThumbHover">#9FB6C6</Color>
+
+    <!-- ======= Sombra de las tarjetas que flotan ======= -->
+    <Color x:Key="C.Shadow">#2B4356</Color>
+
+    <!-- ================= Pinceles ================= -->
+    <SolidColorBrush x:Key="B.Bg" Color="{StaticResource C.Bg}"/>
+    <SolidColorBrush x:Key="B.BgDeep" Color="{StaticResource C.BgDeep}"/>
+    <SolidColorBrush x:Key="B.Panel" Color="{StaticResource C.Panel}"/>
+    <SolidColorBrush x:Key="B.PanelAlt" Color="{StaticResource C.PanelAlt}"/>
+    <SolidColorBrush x:Key="B.Raised" Color="{StaticResource C.Raised}"/>
+    <SolidColorBrush x:Key="B.Header" Color="{StaticResource C.Header}"/>
+
+    <SolidColorBrush x:Key="B.Text" Color="{StaticResource C.Text}"/>
+    <SolidColorBrush x:Key="B.TextDim" Color="{StaticResource C.TextDim}"/>
+    <SolidColorBrush x:Key="B.TextFaint" Color="{StaticResource C.TextFaint}"/>
+    <SolidColorBrush x:Key="B.HeaderText" Color="{StaticResource C.HeaderText}"/>
+
+    <SolidColorBrush x:Key="B.Accent" Color="{StaticResource C.Accent}"/>
+    <SolidColorBrush x:Key="B.Teal" Color="{StaticResource C.Teal}"/>
+    <SolidColorBrush x:Key="B.Indigo" Color="{StaticResource C.Indigo}"/>
+    <SolidColorBrush x:Key="B.Amber" Color="{StaticResource C.Amber}"/>
+    <SolidColorBrush x:Key="B.Coral" Color="{StaticResource C.Coral}"/>
+    <SolidColorBrush x:Key="B.Green" Color="{StaticResource C.Green}"/>
+    <SolidColorBrush x:Key="B.Slate" Color="{StaticResource C.Slate}"/>
+    <SolidColorBrush x:Key="B.OnAccent" Color="{StaticResource C.OnAccent}"/>
+
+    <SolidColorBrush x:Key="B.Line" Color="{StaticResource C.Line}"/>
+    <SolidColorBrush x:Key="B.Edge" Color="{StaticResource C.Edge}"/>
+    <SolidColorBrush x:Key="B.Divider" Color="{StaticResource C.Divider}"/>
+    <SolidColorBrush x:Key="B.Hover" Color="{StaticResource C.Hover}"/>
+    <SolidColorBrush x:Key="B.HoverRow" Color="{StaticResource C.HoverRow}"/>
+    <SolidColorBrush x:Key="B.Pressed" Color="{StaticResource C.Pressed}"/>
+    <SolidColorBrush x:Key="B.Selected" Color="{StaticResource C.Selected}"/>
+    <SolidColorBrush x:Key="B.SelectedEdge" Color="{StaticResource C.SelectedEdge}"/>
+
+    <SolidColorBrush x:Key="B.Field" Color="{StaticResource C.Field}"/>
+    <SolidColorBrush x:Key="B.FieldEdge" Color="{StaticResource C.FieldEdge}"/>
+    <SolidColorBrush x:Key="B.FieldFocus" Color="{StaticResource C.FieldFocus}"/>
+
+    <SolidColorBrush x:Key="B.BarTrack" Color="{StaticResource C.BarTrack}"/>
+    <SolidColorBrush x:Key="B.BarIdle" Color="{StaticResource C.BarIdle}"/>
+
+    <SolidColorBrush x:Key="B.ChipOkBg" Color="{StaticResource C.ChipOkBg}"/>
+    <SolidColorBrush x:Key="B.ChipOkFg" Color="{StaticResource C.ChipOkFg}"/>
+    <SolidColorBrush x:Key="B.ChipBadBg" Color="{StaticResource C.ChipBadBg}"/>
+    <SolidColorBrush x:Key="B.ChipBadFg" Color="{StaticResource C.ChipBadFg}"/>
+    <SolidColorBrush x:Key="B.ChipBadPress" Color="{StaticResource C.ChipBadPress}"/>
+    <SolidColorBrush x:Key="B.ChipWarnBg" Color="{StaticResource C.ChipWarnBg}"/>
+    <SolidColorBrush x:Key="B.ChipWarnFg" Color="{StaticResource C.ChipWarnFg}"/>
+    <SolidColorBrush x:Key="B.ChipInfoBg" Color="{StaticResource C.ChipInfoBg}"/>
+    <SolidColorBrush x:Key="B.ChipInfoFg" Color="{StaticResource C.ChipInfoFg}"/>
+    <SolidColorBrush x:Key="B.ChipNeutralBg" Color="{StaticResource C.ChipNeutralBg}"/>
+    <SolidColorBrush x:Key="B.ChipNeutralFg" Color="{StaticResource C.ChipNeutralFg}"/>
+
+    <SolidColorBrush x:Key="B.BannerEdge" Color="{StaticResource C.BannerEdge}"/>
+    <SolidColorBrush x:Key="B.BannerText" Color="{StaticResource C.BannerText}"/>
+    <SolidColorBrush x:Key="B.BannerTextDim" Color="{StaticResource C.BannerTextDim}"/>
+    <SolidColorBrush x:Key="B.BannerTextFaint" Color="{StaticResource C.BannerTextFaint}"/>
+    <SolidColorBrush x:Key="B.BannerChip" Color="{StaticResource C.BannerChip}"/>
+    <SolidColorBrush x:Key="B.BannerChipEdge" Color="{StaticResource C.BannerChipEdge}"/>
+    <SolidColorBrush x:Key="B.BannerDivider" Color="{StaticResource C.BannerDivider}"/>
+
+    <SolidColorBrush x:Key="B.MenuBg" Color="{StaticResource C.MenuBg}"/>
+    <SolidColorBrush x:Key="B.MenuEdge" Color="{StaticResource C.MenuEdge}"/>
+    <SolidColorBrush x:Key="B.MenuHover" Color="{StaticResource C.MenuHover}"/>
+    <SolidColorBrush x:Key="B.MenuText" Color="{StaticResource C.MenuText}"/>
+    <SolidColorBrush x:Key="B.MenuTextDim" Color="{StaticResource C.MenuTextDim}"/>
+
+    <SolidColorBrush x:Key="B.ScrollThumb" Color="{StaticResource C.ScrollThumb}"/>
+    <SolidColorBrush x:Key="B.ScrollThumbHover" Color="{StaticResource C.ScrollThumbHover}"/>
+
+    <!-- Degradados: cada tema pinta los suyos, que es donde de verdad se nota
+         cuál es oscuro y cuál claro. -->
+    <LinearGradientBrush x:Key="B.Banner" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="{StaticResource C.Banner1}" Offset="0"/>
+        <GradientStop Color="{StaticResource C.Banner2}" Offset="0.55"/>
+        <GradientStop Color="{StaticResource C.Banner3}" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="B.Surface" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="{StaticResource C.Panel}" Offset="0"/>
+        <GradientStop Color="{StaticResource C.Bg}" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="B.TealFill" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#14B4B0" Offset="0"/>
+        <GradientStop Color="#0C8F95" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="B.CoralFill" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#F5726F" Offset="0"/>
+        <GradientStop Color="#DC4C49" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="B.GreenFill" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#3CC891" Offset="0"/>
+        <GradientStop Color="#1F9C6D" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="B.SlateFill" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#657A8A" Offset="0"/>
+        <GradientStop Color="#465A69" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="B.AuroraLine" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="{StaticResource C.Teal}" Offset="0"/>
+        <GradientStop Color="{StaticResource C.Indigo}" Offset="1"/>
+    </LinearGradientBrush>
+
+    <!-- ======= Tipografía ======= -->
+    <FontFamily x:Key="F.Main">Segoe UI Variable Text, Segoe UI</FontFamily>
+    <FontFamily x:Key="F.Display">Segoe UI Variable Display, Segoe UI</FontFamily>
+    <FontFamily x:Key="F.Icon">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
+
+    <!-- Tamaños: cambian el carácter de la interfaz sin tocar la maquetación -->
+    <sys:Double x:Key="Sz.Name">13</sys:Double>
+    <sys:Double x:Key="Sz.Folder">11</sys:Double>
+    <sys:Double x:Key="Sz.Num">12.5</sys:Double>
+    <sys:Double x:Key="Sz.Col">10.5</sys:Double>
+
+    <!-- ======= Geometría: radios ======= -->
+    <CornerRadius x:Key="R.Card">14</CornerRadius>
+    <CornerRadius x:Key="R.Panel">12</CornerRadius>
+    <CornerRadius x:Key="R.Row">10</CornerRadius>
+    <CornerRadius x:Key="R.Button">9</CornerRadius>
+    <CornerRadius x:Key="R.Chip">6</CornerRadius>
+    <CornerRadius x:Key="R.Pill">14</CornerRadius>
+    <CornerRadius x:Key="R.Field">10</CornerRadius>
+    <CornerRadius x:Key="R.Tile">8</CornerRadius>
+
+    <!-- ============================================================
+         FICHAS DEL REDISEÑO (1.5.0)
+         ============================================================
+         Las cuatro de abajo nacieron como colores escritos a mano sueltos en
+         MainWindow, ToolsWindow y AlertWindow. Se suben aquí porque los tres
+         temas han de definirlas: si a un tema le falta una clave, el elemento
+         que la pide se queda sin pincel y sale invisible, y el comprobador de
+         paletas (theme-check) es justo quien pilla ese olvido. -->
+
+    <!-- Texto fuerte sobre la barra superior, que en los tres temas es oscura.
+         HeaderText es el tenue (los iconos sueltos); OnHeader es el nombre de la
+         ventana y lo que deba leerse de verdad. -->
+    <Color x:Key="C.OnHeader">#FFFFFF</Color>
+    <SolidColorBrush x:Key="B.OnHeader" Color="{StaticResource C.OnHeader}"/>
+
+    <!-- Acento claro que va encima de la banda oscura de las ventanas. -->
+    <Color x:Key="C.BannerAccent">#8FE3E3</Color>
+    <SolidColorBrush x:Key="B.BannerAccent" Color="{StaticResource C.BannerAccent}"/>
+
+    <!-- La pasilla del modo incógnito: azul índigo cargado con letra clara. -->
+    <Color x:Key="C.IncogBg">#2A4670</Color>
+    <Color x:Key="C.IncogEdge">#5D80B4</Color>
+    <Color x:Key="C.IncogFg">#C7D8F2</Color>
+    <SolidColorBrush x:Key="B.IncogBg" Color="{StaticResource C.IncogBg}"/>
+    <SolidColorBrush x:Key="B.IncogEdge" Color="{StaticResource C.IncogEdge}"/>
+    <SolidColorBrush x:Key="B.IncogFg" Color="{StaticResource C.IncogFg}"/>
+
+    <!-- El degradado del sello, en diagonal (la línea de acento de abajo sube
+         horizontal). Se usa en la marca de la barra superior y en la raya de la
+         alerta: es la firma visual del programa y por eso cambia con el tema. -->
+    <LinearGradientBrush x:Key="B.AuroraFill" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="{StaticResource C.Teal}" Offset="0"/>
+        <GradientStop Color="{StaticResource C.Indigo}" Offset="1"/>
+    </LinearGradientBrush>
+
+</ResourceDictionary>

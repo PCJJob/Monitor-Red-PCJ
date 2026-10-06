@@ -1,0 +1,20 @@
+<Application x:Class="MonitorRedPCJ.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- [0] LA PALETA: son los colores, y es el único diccionario que se cambia en
+                     caliente. ThemeService lo sustituye entero al elegir otro tema; los estilos
+                     piden sus pinceles por DynamicResource, así que al trocarlo toda la
+                     aplicación se repinta sin cerrar ni reconstruir ninguna ventana.
+                     Se arranca con Aurora (el aspecto histórico) y OnStartup pone el que
+                     estuviera guardado antes de crear la primera ventana. -->
+                <ResourceDictionary Source="Themes/Temas/Aurora.xaml"/>
+                <!-- [1] LAS HOJAS DE ESTILO: el cómo se coloca. Viven por encima de la paleta
+                     porque no definen ningún color propio, solo citan claves de la paleta. -->
+                <ResourceDictionary Source="Themes/Theme.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

@@ -1,0 +1,71 @@
+# Salida de compilación
+[Bb]in/
+[Oo]bj/
+dist/
+publish/
+*.user
+*.suo
+*.binlog
+.vs/
+Test Results/
+
+# El instalador se genera, no se versiona
+MonitorRedPCJ-Setup-*.exe
+
+# Capturas y partes de comprobación que dejan los modos --*-preview / --*-check
+# (un modo de foto que falla escribe el motivo en <archivo>.err junto al PNG)
+*.entera.png
+*.cabecera.txt
+*.err
+parte*.txt
+
+# Basura que dejan Windows y los editores
+Thumbs.db
+desktop.ini
+*.tmp
+*.orig
+*.rej
+*.bak
+*~
+*.log
+
+# Editores e IDE que no forman parte del proyecto
+.vscode/
+.idea/
+*.code-workspace
+
+# Secretos y credenciales. El proyecto no usa ninguno: no hay claves de firma, no hay fichero de
+# entorno y el programa no guarda contraseñas. Se ignoran por si alguien los deja aquí por error
+# al probar algo (una clave privada generada para firmar, un token de GitHub pegado en un .env…).
+.env
+.env.*
+*.pem
+*.key
+*.pfx
+*.p12
+*.snk
+*.token
+*.secret
+secrets.json
+
+# Datos personales que el programa escribe en la máquina de cada uno
+# (%AppData%\MonitorRedPCJ). No se leen del repositorio, así que versionarlos solo serviría para
+# publicar el histórico, las rutas y las decisiones de un equipo concreto.
+settings.json
+apps.json
+malware-lista.txt
+geo-cache.json
+geo-vistos.json
+hosts.pcj-copia
+
+# Lo que NO se ignora a propósito:
+#   src/MonitorRedPCJ/assets/app.ico  -> se regenera con tools/gen-icon.ps1, pero el proyecto
+#                                         lo necesita para compilar, así que va versionado.
+#   capturas/*.png                    -> las cinco capturas del README.
+#   installer/setup.iss               -> lleva BOM UTF-8; no lo reescribas con un guion.
+#   LICENSE · README.md · CAMBIOS.md  -> la documentación que se publica con el código.
+#   build.ps1 · tools/*.ps1           -> sin los guiones no se puede regenerar el icono ni el
+#                                        instalador.
+#
+# Ninguna de las reglas de arriba alcanza a los fuentes: son carpetas de salida, restos de editor,
+# credenciales y los ficheros de datos que crea el propio programa al funcionar.

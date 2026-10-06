@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>MonitorRedPCJ</AssemblyName>
+    <RootNamespace>MonitorRedPCJ</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>assets\app.ico</ApplicationIcon>
+    <Version>1.6.9</Version>
+    <Product>Monitor de Red PCJ</Product>
+    <AssemblyTitle>Monitor de Red PCJ</AssemblyTitle>
+    <Company>PCJ</Company>
+    <Copyright>Copyright (c) 2026 PCJ — Monitor de Red PCJ</Copyright>
+  </PropertyGroup>
+
+</Project>

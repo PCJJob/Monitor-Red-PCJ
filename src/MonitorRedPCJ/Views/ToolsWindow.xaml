@@ -1,0 +1,192 @@
+<Window x:Class="MonitorRedPCJ.Views.ToolsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Más herramientas" Width="1120" Height="720" MinWidth="900" MinHeight="540"
+        WindowStartupLocation="CenterOwner" Background="{DynamicResource B.Bg}"
+        FontFamily="{DynamicResource F.Main}">
+    <DockPanel>
+        <!-- Banda superior: misma familia visual que la cabecera de la ventana principal -->
+        <Border DockPanel.Dock="Top" Background="{DynamicResource B.Header}" Height="64">
+            <Grid Margin="18,0">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- El recuadro del icono es blanco al 13 % con borde blanco al 30 %: una
+                         capa clara sobre la banda oscura de cabecera. Se queda escrito aquí a
+                         propósito y no en la paleta —funciona igual en los tres temas, porque
+                         en todos la cabecera es oscura— y es de las pocas cifras sueltas que
+                         quedan en las vistas. -->
+                    <Border Width="30" Height="30" CornerRadius="9" Background="#22FFFFFF"
+                            BorderBrush="#4DFFFFFF" BorderThickness="1">
+                        <TextBlock Text="&#xE71D;" FontFamily="{DynamicResource F.Icon}"
+                                   FontSize="15" Foreground="{DynamicResource B.BannerAccent}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel VerticalAlignment="Center" Margin="11,0,0,0">
+                        <TextBlock Text="Más herramientas" Foreground="{DynamicResource B.OnHeader}" FontSize="15" FontWeight="SemiBold"/>
+                        <TextBlock Text="Diez utilidades de seguridad de red. Con una apagada no mira nada: ni hilos, ni lecturas."
+                                   Foreground="{DynamicResource B.BannerTextFaint}" FontSize="11.5" Margin="0,1,0,0"/>
+                    </StackPanel>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <TextBlock x:Name="TxtEncendidas" Text="" Foreground="{DynamicResource B.BannerTextFaint}" FontSize="12"
+                               VerticalAlignment="Center" Margin="0,0,14,0"/>
+                    <Button x:Name="BtnCerrar" Content="Cerrar" Style="{StaticResource OnDarkButton}"
+                            Click="OnClose"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Cuerpo: lista de herramientas a la izquierda, ficha a la derecha -->
+        <Grid Margin="16,14">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="292"/>
+                <ColumnDefinition Width="14"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Lista -->
+            <Border Grid.Column="0" Style="{StaticResource Card}" Padding="10">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top" Text="Herramientas" Style="{StaticResource SectionTitle}"
+                               Margin="4,0,0,8"/>
+                    <TextBlock DockPanel.Dock="Top" x:Name="TxtFiltroNota" FontSize="11"
+                               Foreground="{DynamicResource B.TextDim}" Margin="4,0,4,8" TextWrapping="Wrap"
+                               Text="Las dos últimas son las que antes estaban en la ventana principal: escáner y registros. Siguen funcionando igual, solo se mudaron aquí."/>
+                    <ListBox x:Name="ToolList" BorderThickness="0" Background="Transparent"
+                             ItemContainerStyle="{StaticResource ToolTile}"
+                             SelectionChanged="OnSelect"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <!-- Mosaico del icono: el color lo pone cada herramienta -->
+                                    <Border Grid.Column="0" Width="34" Height="34" CornerRadius="10"
+                                            Background="{Binding Mosaico}" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Glifo}" FontSize="15" Foreground="{DynamicResource B.OnHeader}"
+                                                   FontFamily="{DynamicResource F.Icon}"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="10,0,8,0">
+                                        <TextBlock Text="{Binding Nombre}" FontSize="13" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource B.Text}"
+                                                   TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Text="{Binding Lema}" FontSize="11"
+                                                   Foreground="{DynamicResource B.TextDim}"
+                                                   TextTrimming="CharacterEllipsis" Margin="0,1,0,0"/>
+                                    </StackPanel>
+                                    <!-- El punto de estado: verde = encendida y trabajando. -->
+                                    <Ellipse Grid.Column="2" Width="9" Height="9" Fill="{Binding Punto}"
+                                             VerticalAlignment="Center"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </DockPanel>
+            </Border>
+
+            <!-- Ficha -->
+            <Border Grid.Column="2" Style="{StaticResource Card}" Padding="0">
+                <DockPanel>
+                    <!-- Cabecera de la ficha: icono grande, nombre, lema e interruptor -->
+                    <Border DockPanel.Dock="Top" Background="{DynamicResource B.Bg}"
+                            BorderBrush="{DynamicResource B.Line}" BorderThickness="0,0,0,1" Padding="20,16">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Border x:Name="HeadIcon" Grid.Column="0" Width="50" Height="50" CornerRadius="14">
+                                <TextBlock x:Name="HeadGlyph" FontFamily="{DynamicResource F.Icon}"
+                                           FontSize="23" Foreground="{DynamicResource B.OnHeader}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="14,0,0,0">
+                                <TextBlock x:Name="HeadName" Text="Elige una herramienta" FontSize="19"
+                                           FontWeight="SemiBold" Foreground="{DynamicResource B.Text}"
+                                           FontFamily="{DynamicResource F.Display}"/>
+                                <TextBlock x:Name="HeadLema" Text="" FontSize="12.5"
+                                           Foreground="{DynamicResource B.TextDim}" Margin="0,2,0,0"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                <CheckBox x:Name="HeadSwitch" Style="{StaticResource SwitchClaro}"
+                                          HorizontalAlignment="Right" Checked="OnSwitch" Unchecked="OnSwitch"
+                                          AutomationProperties.Name="Encender o apagar esta herramienta"/>
+                                <TextBlock x:Name="HeadSwitchText" Text="Apagada" FontSize="11.5"
+                                           Foreground="{DynamicResource B.TextDim}" HorizontalAlignment="Center"
+                                           Margin="0,5,0,0"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Cuerpo: descripción, guía y la pantalla viva de la herramienta -->
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20,14,20,18">
+                        <StackPanel>
+                            <TextBlock x:Name="TxtQueHace" TextWrapping="Wrap" FontSize="13.5" LineHeight="21"
+                                       Foreground="{DynamicResource B.Text}"/>
+                            <Border x:Name="BoxConsumo" Style="{StaticResource ToolChip}" Margin="0,12,0,0"
+                                    Padding="11,8" HorizontalAlignment="Left">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE872;" FontFamily="{DynamicResource F.Icon}"
+                                               FontSize="13" Foreground="{DynamicResource B.Slate}"
+                                               VerticalAlignment="Top" Margin="0,3,0,0"/>
+                                    <TextBlock x:Name="TxtConsumo" FontSize="12" Margin="8,0,0,0" MaxWidth="620"
+                                       VerticalAlignment="Center" TextWrapping="Wrap"
+                                       Foreground="{DynamicResource B.Slate}"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Guía paso a paso -->
+                            <Expander x:Name="GuideBox" Margin="0,14,0,0" IsExpanded="True"
+                                      Background="Transparent" BorderThickness="0"
+                                      Expanded="OnGuideToggled" Collapsed="OnGuideToggled">
+                                <Expander.Header>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE11F;" FontFamily="{DynamicResource F.Icon}"
+                                                   FontSize="14" Foreground="{DynamicResource B.Teal}"
+                                                   VerticalAlignment="Center"/>
+                                        <TextBlock Text="Cómo se usa" FontSize="13.5" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource B.Text}" Margin="8,0,0,0"
+                                                   VerticalAlignment="Center"/>
+                                        <TextBlock x:Name="TxtPasosN" Text="" FontSize="11.5"
+                                                   Foreground="{DynamicResource B.TextDim}" Margin="7,0,0,0"
+                                                   VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Expander.Header>
+                                <ItemsControl x:Name="GuideList" Margin="2,10,0,0">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="0,0,0,7">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="24"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Border Grid.Column="0" Width="20" Height="20" CornerRadius="10"
+                                                        Background="{DynamicResource B.Selected}" BorderBrush="{DynamicResource B.SelectedEdge}"
+                                                        BorderThickness="1" HorizontalAlignment="Left">
+                                                    <TextBlock Text="{Binding Num}" FontSize="11" FontWeight="Bold"
+                                                               Foreground="{DynamicResource B.Teal}" HorizontalAlignment="Center"
+                                                               VerticalAlignment="Center"/>
+                                                </Border>
+                                                <TextBlock Grid.Column="1" Text="{Binding Texto}" TextWrapping="Wrap"
+                                                           FontSize="12.5" LineHeight="19" Margin="6,0,0,0"
+                                                           Foreground="{DynamicResource B.Text}"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Expander>
+
+                            <!-- Aquí va la pantalla viva de cada herramienta -->
+                            <ContentControl x:Name="Live" Margin="0,18,0,0"/>
+                        </StackPanel>
+                    </ScrollViewer>
+                </DockPanel>
+            </Border>
+        </Grid>
+    </DockPanel>
+</Window>

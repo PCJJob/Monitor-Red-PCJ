@@ -1,0 +1,138 @@
+<Window x:Class="MonitorRedPCJ.Views.AjusteAppWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Configuración adicional" Width="660" Height="680"
+        MinWidth="560" MinHeight="480"
+        WindowStartupLocation="CenterOwner" Background="{DynamicResource B.Bg}"
+        FontFamily="{DynamicResource F.Main}" ShowInTaskbar="False">
+    <Window.Resources>
+        <!-- Una opción del grupo. Es tarjeta clicable, no la casilla gris de Windows: se
+             parece a las tarjetas de temas, que es el mando que ya le gusta al autor. -->
+        <Style x:Key="OpcionCard" TargetType="Border">
+            <Setter Property="Margin" Value="0,0,0,7"/>
+            <Setter Property="Padding" Value="12,10"/>
+            <Setter Property="CornerRadius" Value="{DynamicResource R.Card}"/>
+            <Setter Property="BorderThickness" Value="1.4"/>
+            <Setter Property="Background" Value="{DynamicResource B.Panel}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource B.Line}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="BorderBrush" Value="{DynamicResource B.Edge}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="OpcionNombre" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="{DynamicResource F.Display}"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource B.Text}"/>
+        </Style>
+
+        <Style x:Key="OpcionTexto" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11.5"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="LineHeight" Value="16"/>
+            <Setter Property="Margin" Value="0,4,0,0"/>
+            <Setter Property="Foreground" Value="{DynamicResource B.TextDim}"/>
+        </Style>
+    </Window.Resources>
+
+    <DockPanel Margin="16,14,16,14">
+
+        <!-- ============================ CABECERA ============================ -->
+        <Border DockPanel.Dock="Top" Style="{StaticResource Card}" Margin="0,0,0,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Border Grid.Column="0" x:Name="IconoHost" Width="38" Height="38" CornerRadius="10"
+                        Background="{DynamicResource B.Raised}" BorderBrush="{DynamicResource B.Line}"
+                        BorderThickness="1" VerticalAlignment="Top" Visibility="Collapsed">
+                    <Image x:Name="Icono" Width="24" Height="24" Stretch="Uniform"/>
+                </Border>
+                <StackPanel Grid.Column="1" Margin="11,0,11,0" VerticalAlignment="Center">
+                    <TextBlock x:Name="TxtApp" Style="{StaticResource OpcionNombre}" FontSize="15"
+                               Text="Aplicación" TextTrimming="CharacterEllipsis"/>
+                    <TextBlock x:Name="TxtRuta" Style="{StaticResource OpcionTexto}" Margin="0,2,0,0"
+                               Text="" TextTrimming="CharacterEllipsis"/>
+                </StackPanel>
+                <Border Grid.Column="2" x:Name="ChipEstado" CornerRadius="8" Padding="10,5"
+                        VerticalAlignment="Center" Background="{DynamicResource B.ChipNeutralBg}"
+                        BorderBrush="{DynamicResource B.Line}" BorderThickness="1">
+                    <TextBlock x:Name="TxtEstado" Style="{StaticResource ChipText}" Text="salida"/>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- ============================ PIE ============================ -->
+        <Border DockPanel.Dock="Bottom" Margin="0,12,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" x:Name="TxtPie" Style="{StaticResource OpcionTexto}"
+                           Margin="2,0,10,0" VerticalAlignment="Center"
+                           Text="Se cambia al instante, sin cerrar el programa. Pide aprobación de administrador una sola vez, aunque el modo necesite varios permisos y varios cortes."/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Bottom">
+                    <Button Content="Cancelar" Style="{StaticResource GhostButton}"
+                            IsCancel="True" Margin="0,0,8,0" Click="OnCancelar"/>
+                    <Button x:Name="BtnAplicar" Content="Aplicar configuración"
+                            Style="{StaticResource PrimaryButton}" Click="OnAplicar"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ============================ CUERPO ============================ -->
+        <ScrollViewer x:Name="Cuerpo" VerticalScrollBarVisibility="Auto" Padding="0,0,4,0">
+            <StackPanel>
+                <TextBlock Text="Cómo sale esta aplicación a internet" Style="{StaticResource SectionTitle}"/>
+                <TextBlock Style="{StaticResource SectionLead}" Margin="0,3,0,10"
+                           Text="Es el término medio entre «Permitido» y «Bloqueado» de la pastilla. Se elige uno solo; lo que se escribe en Windows Firewall son las reglas que ese modo necesite."/>
+
+                <!-- Las seis tarjetas se montan desde AppAjustes.Modos: así el texto y las
+                     reglas viven en el mismo sitio y no se pueden contradecir. -->
+                <StackPanel x:Name="ModosHost"/>
+
+                <!-- La caja de puertos solo tiene sentido con el modo «solo los puertos». -->
+                <Border x:Name="PuertosCard" Style="{StaticResource Card}" Margin="0,3,0,0"
+                        Visibility="Collapsed">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource OpcionNombre}" FontSize="12"
+                                   Text="Puertos que se dejan pasar"/>
+                        <Grid Margin="0,7,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox Grid.Column="0" x:Name="TxtPuertos" MaxLength="160" FontSize="12.5"
+                                     Padding="9,6" VerticalContentAlignment="Center"
+                                     Background="{DynamicResource B.Raised}"
+                                     Foreground="{DynamicResource B.Text}"
+                                     BorderBrush="{DynamicResource B.Line}" BorderThickness="1"
+                                     CaretBrush="{DynamicResource B.Text}"/>
+                            <Button Grid.Column="1" Content="Ejemplo" Style="{StaticResource GhostButton}"
+                                    FontSize="11" Padding="10,5" Margin="8,0,0,0" Click="OnEjemploPuertos"
+                                    ToolTip="Escribe una lista de muestra en la caja"/>
+                        </Grid>
+                        <TextBlock Style="{StaticResource OpcionTexto}" Margin="0,6,0,0"
+                                   Text="Separados por comas. Un rango se escribe con dos puntos, y el sufijo /udp marca los puertos UDP: 443, 80, 8000:8100, 53/udp, 123/udp. Lo que no está en la lista queda cortado."/>
+                        <TextBlock x:Name="TxtPuertosAviso" Style="{StaticResource OpcionTexto}"
+                                   Margin="0,6,0,0" Visibility="Collapsed"
+                                   Foreground="{DynamicResource B.Coral}"/>
+                    </StackPanel>
+                </Border>
+
+                <TextBlock Text="Refuerzos que se pueden sumar" Style="{StaticResource SectionTitle}"
+                           Margin="0,16,0,3"/>
+                <TextBlock Style="{StaticResource SectionLead}" Margin="0,0,0,10"
+                           Text="Estos dos no eligen un modo: se pueden añadir al que hayas elegido arriba, y se quitan volviendo a desmarcarlos."/>
+                <StackPanel x:Name="RefuerzosHost"/>
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+</Window>

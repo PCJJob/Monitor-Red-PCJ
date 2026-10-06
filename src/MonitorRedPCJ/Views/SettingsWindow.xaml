@@ -1,0 +1,631 @@
+<Window x:Class="MonitorRedPCJ.Views.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="clr-namespace:MonitorRedPCJ.Views"
+        Title="Configuración" Width="880" Height="600" MinWidth="700" MinHeight="470"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource B.Bg}" FontFamily="{DynamicResource F.Main}"
+        TextOptions.TextFormattingMode="Ideal" UseLayoutRounding="True">
+
+    <!-- ============================================================
+         CONFIGURACIÓN (rediseño de la 1.5.0)
+         ============================================================
+         Antes era una lista de texto plano pegada a unos StackPanel sin más
+         orden que el margen. Ahora la ventana se compone como la pestaña de
+         Protección: navegación con pastillas a la izquierda, tarjetas dentro
+         del hueco de contenido y una banda de mandos abajo.
+
+         Todo se cita con DynamicResource, así que la sección nueva de Temas se
+         puede cambiar de aspecto desde su propia tarjeta sin cerrar la ventana.
+
+         Los nombres de pila (Menu, PageGeneral, ChkStartup…) se conservan: el
+         código los busca por ellos y la comprobación de diseño
+         (el modo settings-preview) abre las secciones por índice. -->
+
+    <Window.Resources>
+
+        <!-- Tarjeta de un ajuste: la misma que en el resto de la aplicación,
+             pero separada de la siguiente. -->
+        <Style x:Key="SettingCard" TargetType="Border" BasedOn="{StaticResource Card}">
+            <Setter Property="Margin" Value="0,0,0,12"/>
+        </Style>
+
+        <Style x:Key="CardTitle" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="{DynamicResource F.Main}"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource B.Text}"/>
+        </Style>
+
+        <Style x:Key="CardHint" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="{DynamicResource F.Main}"/>
+            <Setter Property="FontSize" Value="11.5"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="LineHeight" Value="16"/>
+            <Setter Property="Foreground" Value="{DynamicResource B.TextDim}"/>
+        </Style>
+
+        <!-- Un ajuste por línea: el mando a la izquierda, su explicación debajo,
+             y a la derecha lo que haga falta (caja de número, interruptor…). -->
+        <Style x:Key="RowGrid" TargetType="Grid">
+            <Setter Property="Margin" Value="0,10,0,10"/>
+        </Style>
+
+        <Style x:Key="NumField" TargetType="TextBox">
+            <Setter Property="Width" Value="58"/>
+            <Setter Property="TextAlignment" Value="Center"/>
+            <Setter Property="Padding" Value="6,5"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <!-- ======= Tarjeta de tema =======
+             Cada paleta se enseña con una maqueta diminuta pintada con SUS
+             colores, no con los del tema en uso: así se ve lo que se va a
+             obtener antes de pulsar. Los pinceles los pone el código leyendo
+             la paleta guardada (ThemeService.Tinta). -->
+        <Style x:Key="ThemeCard" TargetType="Border">
+            <Setter Property="Width" Value="236"/>
+            <Setter Property="Margin" Value="0,0,12,12"/>
+            <Setter Property="CornerRadius" Value="{DynamicResource R.Card}"/>
+            <Setter Property="BorderThickness" Value="1.4"/>
+            <Setter Property="Background" Value="{DynamicResource B.Panel}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource B.Line}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="BorderBrush" Value="{DynamicResource B.Edge}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="ThemeName" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="{DynamicResource F.Display}"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource B.Text}"/>
+        </Style>
+
+        <Style x:Key="ThemeLema" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="LineHeight" Value="15"/>
+            <Setter Property="Margin" Value="0,3,0,0"/>
+            <Setter Property="Foreground" Value="{DynamicResource B.TextDim}"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="214"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- ======= Navegación ======= -->
+        <Border Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Background="{DynamicResource B.Panel}"
+                BorderBrush="{DynamicResource B.Line}" BorderThickness="0,0,1,0">
+            <DockPanel LastChildFill="False" Margin="10,16,10,12">
+                <StackPanel DockPanel.Dock="Top" Margin="5,0,0,16">
+                    <StackPanel Orientation="Horizontal">
+                        <Border Width="30" Height="30" CornerRadius="{DynamicResource R.Tile}"
+                                Background="{DynamicResource B.AuroraFill}">
+                            <TextBlock Text="&#xE713;" FontFamily="{DynamicResource F.Icon}" FontSize="15"
+                                       Foreground="{DynamicResource B.OnAccent}"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel VerticalAlignment="Center" Margin="10,0,0,0">
+                            <TextBlock Text="Configuración" FontFamily="{DynamicResource F.Display}"
+                                       FontSize="15" FontWeight="Bold" Foreground="{DynamicResource B.Text}"/>
+                            <TextBlock Text="Monitor de Red PCJ" FontSize="11" Margin="0,1,0,0"
+                                       Foreground="{DynamicResource B.TextDim}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Cada entrada lleva su glifo y su nombre escritos dentro del propio
+                     contenido. Antes el glifo vivía en el Tag del ListBoxItem y la
+                     plantilla lo buscaba por AncestorType; eso dejaba la columna de
+                     icono en blanco, porque el TextBlock nacía dentro del ContentPresenter
+                     del estilo NavTile y la búsqueda del contenedor no llegaba a él.
+                     Poniendo las dos líneas a mano el icono siempre sale, y el color lo
+                     sigue dando el estilo de la pastilla: los TextBlock sin Foreground
+                     propio heredan el que NavTile pone en el ListBoxItem. -->
+                <ListBox x:Name="Menu" DockPanel.Dock="Top" BorderThickness="0" Background="Transparent"
+                         ItemContainerStyle="{StaticResource NavTile}"
+                         SelectionChanged="OnMenu" SelectedIndex="0"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    <ListBoxItem>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE713;" FontFamily="{DynamicResource F.Icon}" FontSize="15"
+                                       Width="22" VerticalAlignment="Center"/>
+                            <TextBlock Text="General" FontSize="13" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE72E;" FontFamily="{DynamicResource F.Icon}" FontSize="15"
+                                       Width="22" VerticalAlignment="Center"/>
+                            <TextBlock Text="Protección" FontSize="13" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE8F1;" FontFamily="{DynamicResource F.Icon}" FontSize="15"
+                                       Width="22" VerticalAlignment="Center"/>
+                            <TextBlock Text="Excepciones" FontSize="13" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE968;" FontFamily="{DynamicResource F.Icon}" FontSize="15"
+                                       Width="22" VerticalAlignment="Center"/>
+                            <TextBlock Text="Escáner de red" FontSize="13" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE7FC;" FontFamily="{DynamicResource F.Icon}" FontSize="15"
+                                       Width="22" VerticalAlignment="Center"/>
+                            <TextBlock Text="Herramientas" FontSize="13" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE790;" FontFamily="{DynamicResource F.Icon}" FontSize="15"
+                                       Width="22" VerticalAlignment="Center"/>
+                            <TextBlock Text="Temas" FontSize="13" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE946;" FontFamily="{DynamicResource F.Icon}" FontSize="15"
+                                       Width="22" VerticalAlignment="Center"/>
+                            <TextBlock Text="Acerca de" FontSize="13" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </ListBoxItem>
+                </ListBox>
+
+                <!-- Abajo del todo, el tema que se está usando: es el dato que uno busca
+                     cuando quiere volver al aspecto de antes. -->
+                <Border DockPanel.Dock="Bottom" Style="{StaticResource TagChip}" Margin="5,0,4,2"
+                        HorizontalAlignment="Left">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE790;" FontFamily="{DynamicResource F.Icon}" FontSize="11"
+                                   VerticalAlignment="Center" Foreground="{DynamicResource B.ChipNeutralFg}"/>
+                        <TextBlock x:Name="TxtTemaPie" Text="Tema: Aurora" FontSize="11" Margin="6,0,0,0"
+                                   VerticalAlignment="Center" Foreground="{DynamicResource B.ChipNeutralFg}"/>
+                    </StackPanel>
+                </Border>
+            </DockPanel>
+        </Border>
+
+        <!-- ======= Contenido ======= -->
+        <ScrollViewer x:Name="Contenido" Grid.Row="0" Grid.Column="1" VerticalScrollBarVisibility="Auto"
+                      Padding="26,20,26,10">
+            <StackPanel>
+
+                <!-- ================ General ================ -->
+                <StackPanel x:Name="PageGeneral">
+                    <TextBlock Text="General" Style="{StaticResource SectionTitle}"/>
+                    <TextBlock Style="{StaticResource SectionLead}"
+                               Text="Con qué arranca PCJ, cuándo avisa y cuánto tiempo guarda lo que vio."/>
+
+                    <Border Style="{StaticResource SettingCard}">
+                        <StackPanel>
+                            <CheckBox x:Name="ChkStartup" Style="{StaticResource CheckRow}"
+                                      Content="Ejecutar al iniciar Windows"/>
+                            <TextBlock Style="{StaticResource CardHint}" Margin="0,5,0,0"
+                                       Text="Se añade al arranque del usuario; no hace falta ser administrador."/>
+                            <Border Height="1" Background="{DynamicResource B.Divider}" Margin="0,12"/>
+                            <CheckBox x:Name="ChkAlerts" Style="{StaticResource CheckRow}"
+                                      Content="Notificar cuando una aplicación nueva pide salida"/>
+                            <TextBlock Style="{StaticResource CardHint}" Margin="0,5,0,0"
+                                       Text="Si se apaga, la primera conexión de cada programa nuevo no se decide aquí: se queda sin decidir hasta que lo marques en la lista."/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource SettingCard}">
+                        <Grid Style="{StaticResource RowGrid}" Margin="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                <TextBlock Style="{StaticResource CardTitle}" Text="Modo incógnito"/>
+                                <TextBlock Style="{StaticResource CardHint}" Margin="0,3,0,0" MaxWidth="470"
+                                           HorizontalAlignment="Left"
+                                           Text="Mientras esté activo, PCJ no escribe en disco el tráfico acumulado por programa, ni los registros, ni los dispositivos que vio la red: la ventana se sigue llenando en vivo y al cerrar no queda rastro de ese tramo. No oculta nada a tu router ni a tu operadora, y las reglas del firewall (quién puede salir) se siguen guardando igual."/>
+                            </StackPanel>
+                            <CheckBox x:Name="ChkIncognito" Grid.Column="1" Style="{StaticResource SwitchClaro}"
+                                      VerticalAlignment="Center" AutomationProperties.Name="Modo incógnito"/>
+                        </Grid>
+                    </Border>
+
+                    <Border Style="{StaticResource SettingCard}">
+                        <StackPanel>
+                            <Grid Style="{StaticResource RowGrid}" Margin="0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                    <TextBlock Style="{StaticResource CardTitle}" Text="Conservar el histórico"/>
+                                    <TextBlock Style="{StaticResource CardHint}" Margin="0,3,0,0"
+                                               Text="Días de tráfico que se guardan antes de borrarse solos."/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBox x:Name="TxtRetention" Style="{StaticResource NumField}"/>
+                                    <TextBlock Text="días" FontSize="12" Margin="8,0,0,0" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource B.TextDim}"/>
+                                </StackPanel>
+                            </Grid>
+                            <Border Height="1" Background="{DynamicResource B.Divider}" Margin="0,2,0,0"/>
+                            <Button Content="Borrar todo el histórico" Style="{StaticResource DangerButton}"
+                                    HorizontalAlignment="Left" Margin="0,12,0,0" Padding="14,8"
+                                    Click="OnClearHistory"/>
+                            <TextBlock Style="{StaticResource CardHint}" Margin="0,6,0,0"
+                                       Text="Se borran eventos, tráfico acumulado y dispositivos vistos. Las reglas del firewall no se tocan: quién puede salir seguirá igual."/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- ================ Protección ================ -->
+                <StackPanel x:Name="PageProtect" Visibility="Collapsed">
+                    <TextBlock Text="Protección" Style="{StaticResource SectionTitle}"/>
+                    <TextBlock Style="{StaticResource SectionLead}"
+                               Text="El bloqueo total y las reglas de Windows Firewall se mandan desde su pestaña; aquí solo se ve el estado y se limpia lo viejo."/>
+
+                    <Border Style="{StaticResource SettingCard}">
+                        <Grid Style="{StaticResource RowGrid}" Margin="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                <TextBlock x:Name="TxtProtectState" Text="Bloqueo total: desactivado"
+                                           Style="{StaticResource CardTitle}" FontSize="14"/>
+                                <TextBlock Style="{StaticResource CardHint}" Margin="0,4,0,0" MaxWidth="470"
+                                           HorizontalAlignment="Left"
+                                           Text="El bloqueo total se activa o se quita desde la pestaña «Protección», donde decides qué aplicaciones pueden salir. Las reglas se crean en Windows Firewall con el prefijo MRPCJ: y cambiar la política de salida pide aprobación de administrador."/>
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="Ir a Protección" Style="{StaticResource GhostButton}"
+                                    VerticalAlignment="Center" Click="OnIrAProteccion"/>
+                        </Grid>
+                    </Border>
+
+                    <Border Style="{StaticResource SettingCard}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource CardTitle}" Text="Reglas de programas que ya no están"/>
+                            <TextBlock Style="{StaticResource CardHint}" Margin="0,4,0,0"
+                                       Text="Al desinstalar algo queda su regla en Windows Firewall sin que nadie la use. Este repaso las busca por su ruta y borra solo las que apuntan a un archivo que ya no existe."/>
+                            <Button Content="Limpiar reglas de apps desinstaladas" Style="{StaticResource GhostButton}"
+                                    HorizontalAlignment="Left" Margin="0,12,0,0" Click="OnCleanup"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- ================ Excepciones del sistema ================ -->
+                <StackPanel x:Name="PageExc" Visibility="Collapsed">
+                    <TextBlock Text="Excepciones del sistema" Style="{StaticResource SectionTitle}"/>
+                    <TextBlock Style="{StaticResource SectionLead}"
+                               Text="Con el bloqueo total puesto, Windows deja de actualizarse, de resolver nombres y hasta de pedir dirección al router: sus servicios son programas como cualquier otro y PCJ les cortó la salida por no tener permiso. Estas son las salidas que el propio sistema necesita, una a una, para que abras las que uses y dejes cerradas las demás."/>
+
+                    <Border Style="{StaticResource SettingCard}">
+                        <Grid Style="{StaticResource RowGrid}" Margin="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                <TextBlock Style="{StaticResource CardTitle}"
+                                           Text="Dejar hablar con los aparatos de casa"/>
+                                <TextBlock Style="{StaticResource CardHint}" Margin="0,3,0,0"
+                                           Text="Con el bloqueo total puesto, la impresora del pasillo, el NAS, el Chromecast y el móvil también se quedan cortados: para PCJ son salida a otra máquina. Esta opción vuelve a abrir solo lo local —tu subred, el multicast y el broadcast— en los dos sentidos, y deja internet como lo tenías: un programa al que no le diste permiso seguirá sin poder salir a la calle. Ábrela si usas compartir archivos, imprimir o emitir a un aparato de casa; en un portátil de viaje ciérrala."/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="18,0,0,0">
+                                <CheckBox x:Name="ChkRedLocal" Style="{StaticResource SwitchClaro}"
+                                          HorizontalAlignment="Right"
+                                          Checked="OnRedLocal" Unchecked="OnRedLocal"/>
+                                <!-- Las palabras debajo de la palanca, igual que en las fichas del
+                                     catálogo: aquí encender es DEJAR PASAR, que es lo contrario de
+                                     lo que parece, y sin escribirlo nadie lo saca adivinando. -->
+                                <TextBlock x:Name="TxtEstadoRedLocal" Style="{StaticResource CardHint}"
+                                           FontSize="11" FontWeight="SemiBold" Margin="0,4,0,0"
+                                           HorizontalAlignment="Right" Text="bloqueo activo"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <Border Style="{StaticResource SettingCard}">
+                        <StackPanel>
+                            <Grid Style="{StaticResource RowGrid}" Margin="0,0,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                    <TextBlock Style="{StaticResource CardTitle}"
+                                               Text="Lista de bloqueos de malware"/>
+                                    <TextBlock Style="{StaticResource CardHint}" Margin="0,3,0,0"
+                                               Text="Además de cortar la salida por programa, PCJ puede cerrar los dominios que una lista pública tiene por maliciosos: mandos de botnet, páginas que sueltan troyanos, falsos soportes técnicos. Se hace escribiendo el fichero hosts de Windows, que el sistema consulta antes de preguntar a nadie, así que cuela con cualquier programa, incluido el que no pasa por un proxy. Cada vez que se escribe queda una copia del hosts anterior en la misma carpeta (hosts.pcj-copia), y apagar la opción devuelve el fichero a como estaba."/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="18,0,0,0">
+                                    <CheckBox x:Name="ChkMalware" Style="{StaticResource SwitchClaro}"
+                                              HorizontalAlignment="Right"
+                                              Checked="OnMalware" Unchecked="OnMalware"/>
+                                    <!-- Al revés que las demás: aquí encendido sí es estar
+                                         cortando, y por eso el verde le toca al «activo». -->
+                                    <TextBlock x:Name="TxtEstadoMalware" Style="{StaticResource CardHint}"
+                                               FontSize="11" FontWeight="SemiBold" Margin="0,4,0,0"
+                                               HorizontalAlignment="Right" Text="bloqueo inactivo"/>
+                                </StackPanel>
+                            </Grid>
+                            <!-- El estado puede ponerse en dos líneas largas (un aviso de la
+                                 descarga, por ejemplo), así que los botones van abajo, en su
+                                 propia fila, para que nunca queden encima del texto. -->
+                            <TextBlock x:Name="TxtMalwareEstado" Style="{StaticResource CardHint}"
+                                       Margin="0,4,0,0" Text="Sin descargar todavía."/>
+                            <!-- El interruptor dice lo que se quiere, y el hosts dice lo que hay: si
+                                 se escribieron cosas distintas esto se enciende en rojo. -->
+                            <TextBlock x:Name="TxtMalwareAviso" Style="{StaticResource CardHint}"
+                                       Margin="0,5,0,0" Visibility="Collapsed"
+                                       Foreground="{DynamicResource B.Coral}"/>
+                            <TextBlock Style="{StaticResource CardHint}" Margin="0,2,0,0"
+                                       Text="La lista se baja de urlhaus.abuse.ch y se guarda en tu carpeta de datos como malware-lista.txt: si no hay internet, PCJ sigue usando la última copia que bajó. La dirección de la fuente se puede cambiar en settings.json."/>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+                                <Button x:Name="BtnMalwarePanel" Style="{StaticResource GhostButton}"
+                                        Margin="0,0,8,0" Click="OnMalwarePanel"
+                                        ToolTip="Abre el panel donde se ve la descarga paso a paso: bytes, líneas leídas, dominios sacados y dónde quedó la copia">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE7C3;" FontFamily="{DynamicResource F.Icon}"
+                                                   FontSize="12" Margin="0,0,7,0"
+                                                   VerticalAlignment="Center"/>
+                                        <TextBlock Text="Ver el proceso" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button x:Name="BtnMalwareActualizar" Style="{StaticResource GhostButton}"
+                                        Click="OnMalwareActualizar"
+                                        ToolTip="Baja la lista de nuevo y, con el interruptor encendido, la vuelve a escribir en el hosts">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE896;" FontFamily="{DynamicResource F.Icon}"
+                                                   FontSize="12" Margin="0,0,7,0"
+                                                   VerticalAlignment="Center"/>
+                                        <TextBlock Text="Actualizar la lista" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource SettingCard}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource CardTitle}"
+                                       Text="Las que convienen casi siempre"/>
+                            <TextBlock Style="{StaticResource CardHint}" Margin="0,3,0,0"
+                                       Text="Apagarlas se nota en minutos: sin DHCP te quedas sin red al reiniciar, sin DNS no abre ninguna página, sin Windows Update el equipo se queda sin parches. La palanca de la derecha es la excepción, así que encendida DEJA PASAR y debajo queda escrito si el bloqueo está activo o inactivo; «ver la explicación» saca para qué sirve y qué reglas escribe. Todo va cerrado por defecto para que la lista quepa en la pantalla."/>
+                            <!-- Las filas las monta el código: son quince y con su texto largo,
+                                 escribirlas a mano en la XAML sería duplicar el catálogo. -->
+                            <StackPanel x:Name="ExcRecomendadas" Margin="0,10,0,0"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource SettingCard}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource CardTitle}"
+                                       Text="Solo si usas esa función"/>
+                            <TextBlock Style="{StaticResource CardHint}" Margin="0,3,0,0"
+                                       Text="Compartir archivos, escritorio remoto o una VPN abren puertas que en un portátil de calle no quieres abiertas. Estas vienen apagadas por defecto, y las que hablan con otros equipos están limitadas a tu red local: desde internet no se alcanza ninguna."/>
+                            <StackPanel x:Name="ExcOpcionales" Margin="0,10,0,0"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource SettingCard}">
+                        <Grid Style="{StaticResource RowGrid}" Margin="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                <TextBlock x:Name="TxtExcPie" Style="{StaticResource CardTitle}" FontSize="13"
+                                           Text="Sin cambios."/>
+                                <TextBlock Style="{StaticResource CardHint}" Margin="0,4,0,0" MaxWidth="470"
+                                           HorizontalAlignment="Left"
+                                           Text="Cada interruptor escribe sus reglas en Windows Firewall al momento, con el prefijo MRPCJ: EXC. Si limpias reglas a mano o Windows las quita, con este botón se vuelven a escribir las que tengas encendidas."/>
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="Reescribir las activas"
+                                    Style="{StaticResource GhostButton}" VerticalAlignment="Center"
+                                    Click="OnExcReescribir"/>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+
+                <!-- ================ Escáner ================ -->
+                <StackPanel x:Name="PageScanner" Visibility="Collapsed">
+                    <TextBlock Text="Escáner de red" Style="{StaticResource SectionTitle}"/>
+                    <TextBlock Style="{StaticResource SectionLead}"
+                               Text="Con qué frecuencia mira PCJ qué hay conectado a tu red y qué hace cuando lo encuentra."/>
+
+                    <Border Style="{StaticResource SettingCard}">
+                        <StackPanel>
+                            <Grid Style="{StaticResource RowGrid}" Margin="0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                    <TextBlock Style="{StaticResource CardTitle}" Text="Escanear automáticamente"/>
+                                    <TextBlock Style="{StaticResource CardHint}" Margin="0,3,0,0"
+                                               Text="Apagado, la lista de dispositivos solo se mueve cuando le das a Escanear."/>
+                                </StackPanel>
+                                <CheckBox x:Name="ChkAutoScan" Grid.Column="1" Style="{StaticResource SwitchClaro}"
+                                          VerticalAlignment="Center" AutomationProperties.Name="Escanear automáticamente"/>
+                            </Grid>
+                            <Border Height="1" Background="{DynamicResource B.Divider}"/>
+                            <Grid Style="{StaticResource RowGrid}" Margin="0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                    <TextBlock Style="{StaticResource CardTitle}" Text="Intervalo"/>
+                                    <TextBlock Style="{StaticResource CardHint}" Margin="0,3,0,0"
+                                               Text="Cada cuánto se repasa la red, en minutos."/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBox x:Name="TxtScanInterval" Style="{StaticResource NumField}"/>
+                                    <TextBlock Text="min" FontSize="12" Margin="8,0,0,0" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource B.TextDim}"/>
+                                </StackPanel>
+                            </Grid>
+                            <Button Content="Escanear ahora" Style="{StaticResource PrimaryButton}"
+                                    HorizontalAlignment="Left" Margin="0,10,0,0" Click="OnScanNow"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- ================ Herramientas ================ -->
+                <StackPanel x:Name="PageTools" Visibility="Collapsed">
+                    <TextBlock Text="Herramientas" Style="{StaticResource SectionTitle}"/>
+                    <TextBlock Style="{StaticResource SectionLead}"
+                               Text="Las diez utilidades están detrás de «Más herramientas». Aquí eliges cuál ocupa la pestaña grande de la ventana."/>
+
+                    <Border Style="{StaticResource SettingCard}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource CardTitle}" Text="Pestaña en la ventana principal"/>
+                            <TextBlock Style="{StaticResource CardHint}" Margin="0,4,0,0"
+                                       Text="Cada una lleva su interruptor en la caja de herramientas: apagada no mira la red, no abre hilos y no escribe en disco."/>
+                            <ListBox x:Name="LstPrincipal" Margin="0,12,0,0" BorderThickness="0"
+                                     Background="Transparent" MaxHeight="292"
+                                     ItemContainerStyle="{StaticResource ToolTile}"
+                                     SelectionChanged="OnElegirPrincipal"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel/>
+                                    </ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" Width="214">
+                                            <Border Width="32" Height="32" CornerRadius="10" Margin="0,0,10,0"
+                                                    Background="{Binding Mosaico}" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Glifo}" FontSize="15"
+                                                           FontFamily="{DynamicResource F.Icon}"
+                                                           Foreground="{Binding Tinta}"
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <StackPanel VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Nombre}" FontSize="12.5" Width="168"
+                                                           Foreground="{DynamicResource B.Text}"/>
+                                                <TextBlock Text="{Binding Lema}" FontSize="10.5" Width="168"
+                                                           TextWrapping="Wrap" MaxHeight="30"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           Foreground="{DynamicResource B.TextDim}"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                            <Button Content="Abrir Más herramientas" Style="{StaticResource GhostButton}"
+                                    HorizontalAlignment="Left" Margin="0,14,0,0" Click="OnAbrirHerramientas"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- ================ Temas (la sección nueva) ================ -->
+                <StackPanel x:Name="PageThemes" Visibility="Collapsed">
+                    <TextBlock Text="Temas" Style="{StaticResource SectionTitle}"/>
+                    <TextBlock Style="{StaticResource SectionLead}"
+                               Text="El aspecto de toda la aplicación. Cada tarjeta está pintada con los colores de su propio tema, así que lo que ves es lo que vas a obtener. Se nota al momento, sin cerrar nada, y se recuerda para el próximo arranque."/>
+
+                    <Border Style="{StaticResource SettingCard}" Padding="14,14,2,2">
+                        <!-- Las tarjetas se montan desde el código: es quien puede leer
+                             los pinceles de cada paleta sin montarla en la aplicación. -->
+                        <WrapPanel x:Name="ThemeHost" Orientation="Horizontal"/>
+                    </Border>
+
+                    <Border Style="{StaticResource SettingCard}">
+                        <Grid Style="{StaticResource RowGrid}" Margin="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                <TextBlock Style="{StaticResource CardTitle}"
+                                           Text="Volver al aspecto con el que venías"/>
+                                <TextBlock x:Name="TxtTemaHint" Style="{StaticResource CardHint}" Margin="0,3,0,0"
+                                           Text="Aurora es el tema original de PCJ: si pruebas otro y no te convence, con este botón vuelves a él."/>
+                            </StackPanel>
+                            <Button x:Name="BtnTemaBase" Grid.Column="1" Content="Poner Aurora"
+                                    Style="{StaticResource GhostButton}" VerticalAlignment="Center"
+                                    Click="OnTemaBase"/>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+
+                <!-- ================ Acerca de ================ -->
+                <StackPanel x:Name="PageAbout" Visibility="Collapsed">
+                    <TextBlock Text="Acerca de" Style="{StaticResource SectionTitle}"/>
+                    <TextBlock Style="{StaticResource SectionLead}"
+                               Text="Qué es este programa, dónde guarda lo que sabe y de qué puedes fiarte."/>
+
+                    <Border Style="{StaticResource SettingCard}">
+                        <!-- Rejilla y no pila horizontal: una pila da a los hijos ancho infinito,
+                             así que el texto no se parte en dos líneas y se corta por el borde de
+                             la ventana. Con la columna «*» el aviso de abajo envuelve dentro de la
+                             tarjeta, igual que en las demás. Mismo dibujo: icono de 44 y 13 px de
+                             aire a la izquierda del texto. -->
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="44"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Width="44" Height="44" CornerRadius="{DynamicResource R.Panel}"
+                                    Background="{DynamicResource B.AuroraFill}">
+                                <TextBlock Text="&#xE72E;" FontFamily="{DynamicResource F.Icon}" FontSize="21"
+                                           Foreground="{DynamicResource B.OnAccent}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="13,0,0,0">
+                                <TextBlock x:Name="TxtAboutVersion" Text="Monitor de Red PCJ"
+                                           FontFamily="{DynamicResource F.Display}" FontSize="16"
+                                           FontWeight="Bold" Foreground="{DynamicResource B.Text}"/>
+                                <TextBlock Style="{StaticResource CardHint}" Margin="0,2,0,0"
+                                           Text="Software gratuito y de código abierto, con licencia MIT. Autor: PCJ. El funcionamiento es local; solo algunas funciones opcionales, apagadas por defecto, consultan servicios externos para actualizar la lista de protección o saber el país de cada IP."/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <Border Style="{StaticResource SettingCard}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource CardTitle}" Text="Dónde están los datos"/>
+                            <TextBlock x:Name="TxtRutaDatos" Style="{StaticResource CardHint}" Margin="0,4,0,0"
+                                       Text="%AppData%\MonitorRedPCJ"/>
+                            <TextBlock Style="{StaticResource CardHint}" Margin="0,8,0,0"
+                                       Text="Ahí van el histórico de tráfico, los registros, los dispositivos vistos y los ajustes. Las reglas de quién puede salir no están en un fichero: viven en Windows Firewall, con el prefijo MRPCJ:, para que se puedan revisar desde ahí."/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- ======= Banda de mandos ======= -->
+        <Border Grid.Row="1" Grid.Column="1" Background="{DynamicResource B.PanelAlt}"
+                BorderBrush="{DynamicResource B.Line}" BorderThickness="0,1,0,0" Padding="20,11">
+            <Grid>
+                <TextBlock VerticalAlignment="Center" FontSize="11.5" MaxWidth="330" HorizontalAlignment="Left"
+                           TextWrapping="Wrap" LineHeight="15"
+                           Foreground="{DynamicResource B.TextDim}"
+                           Text="Los ajustes se guardan al dar a Aceptar. Los temas y las excepciones del sistema, en cuanto los pulsas."/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="Cancelar" Style="{StaticResource GhostButton}" Click="OnCancel"
+                            Margin="0,0,10,0"/>
+                    <Button x:Name="BtnOk" Content="Aceptar" Style="{StaticResource PrimaryButton}" Click="OnOk"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

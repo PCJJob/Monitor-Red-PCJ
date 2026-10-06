@@ -1,0 +1,1500 @@
+<UserControl x:Class="MonitorRedPCJ.Views.ProtectView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="clr-namespace:MonitorRedPCJ.Views"
+             xmlns:c="clr-namespace:MonitorRedPCJ.Controls">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolVis"/>
+
+        <!-- Flechita cuadrada que abre y cierra algo. La versión genómica (Chevron) manda el
+             glifo el contenido, que es como se usa en la cabecera. -->
+        <Style x:Key="Chevron" TargetType="Button">
+            <Setter Property="Width" Value="24"/>
+            <Setter Property="Height" Value="24"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{DynamicResource B.TextFaint}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="8"
+                                BorderBrush="Transparent" BorderThickness="1">
+                            <TextBlock Text="{TemplateBinding Content}" VerticalAlignment="Center"
+                                       HorizontalAlignment="Center" FontSize="11"
+                                       FontFamily="{DynamicResource F.Icon}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource B.Selected}"/>
+                                <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource B.SelectedEdge}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource B.Accent}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- La flechita de cada fila: el glifo no se cambia por otro, lo gira el adjunto
+             Fx.Turned según Row.Expanded. Eso es lo que hace que abrir una fila se vea
+             moverse en vez de ocurrir de golpe. -->
+        <Style x:Key="ChevronRow" TargetType="Button" BasedOn="{StaticResource Chevron}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="8"
+                                BorderBrush="Transparent" BorderThickness="1">
+                            <TextBlock Text="&#xE70D;" RenderTransformOrigin="0.5,0.5"
+                                       c:Fx.Turned="{Binding Expanded}" VerticalAlignment="Center"
+                                       HorizontalAlignment="Center" FontSize="11"
+                                       FontFamily="{DynamicResource F.Icon}">
+                                <TextBlock.RenderTransform>
+                                    <RotateTransform Angle="0"/>
+                                </TextBlock.RenderTransform>
+                            </TextBlock>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource B.Selected}"/>
+                                <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource B.SelectedEdge}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ======= Medidores de la cabecera de la lista =======
+             Cuatro chips: cifra grande arriba, qué significa abajo. El color de
+             cada uno ya dice si ese número es bueno, malo o neutro, así que la
+             frase larga que había antes sobra. BasedOn es StaticResource a
+             propósito: los estilos base viven en este mismo diccionario. -->
+        <Style x:Key="MetricBase" TargetType="Border">
+            <Setter Property="CornerRadius" Value="{DynamicResource R.Panel}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="12,5,12,6"/>
+            <Setter Property="MinWidth" Value="84"/>
+        </Style>
+        <Style x:Key="MetricRun" TargetType="Border" BasedOn="{StaticResource MetricBase}">
+            <Setter Property="Background" Value="{DynamicResource B.ChipInfoBg}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource B.ChipInfoBg}"/>
+            <Setter Property="TextElement.Foreground" Value="{DynamicResource B.ChipInfoFg}"/>
+        </Style>
+        <Style x:Key="MetricOk" TargetType="Border" BasedOn="{StaticResource MetricBase}">
+            <Setter Property="Background" Value="{DynamicResource B.ChipOkBg}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource B.ChipOkBg}"/>
+            <Setter Property="TextElement.Foreground" Value="{DynamicResource B.ChipOkFg}"/>
+        </Style>
+        <Style x:Key="MetricCut" TargetType="Border" BasedOn="{StaticResource MetricBase}">
+            <Setter Property="Background" Value="{DynamicResource B.ChipBadBg}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource B.ChipBadBg}"/>
+            <Setter Property="TextElement.Foreground" Value="{DynamicResource B.ChipBadFg}"/>
+        </Style>
+        <Style x:Key="MetricWait" TargetType="Border" BasedOn="{StaticResource MetricBase}">
+            <Setter Property="Background" Value="{DynamicResource B.ChipNeutralBg}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource B.Line}"/>
+            <Setter Property="TextElement.Foreground" Value="{DynamicResource B.ChipNeutralFg}"/>
+        </Style>
+
+        <!-- Los cuatro recuentos son además los cuatro filtros: al pinchar uno, la lista de
+             abajo se queda solo con esas apps, y se vuelve a pinchar para soltar el filtro.
+             Mismo dibujo que las pastillas de antes (cifra arriba, palabra abajo) para que la
+             franja no cambie de cara; lo único que gana es el cursor de mano, el rebaje al
+             pasar por encima y un borde del color del propio chip cuando está elegido. -->
+        <Style x:Key="ChipFiltro" TargetType="ToggleButton">
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="12,5,12,6"/>
+            <Setter Property="MinWidth" Value="84"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border x:Name="Marco"
+                                CornerRadius="{DynamicResource R.Panel}"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Marco" Property="Opacity" Value="0.88"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Marco" Property="BorderBrush"
+                                        Value="{DynamicResource B.Accent}"/>
+                                <Setter TargetName="Marco" Property="BorderThickness" Value="1"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="FiltroRun" TargetType="ToggleButton" BasedOn="{StaticResource ChipFiltro}">
+            <Setter Property="Background" Value="{DynamicResource B.ChipInfoBg}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource B.ChipInfoBg}"/>
+            <Setter Property="Foreground" Value="{DynamicResource B.ChipInfoFg}"/>
+        </Style>
+        <Style x:Key="FiltroOk" TargetType="ToggleButton" BasedOn="{StaticResource ChipFiltro}">
+            <Setter Property="Background" Value="{DynamicResource B.ChipOkBg}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource B.ChipOkBg}"/>
+            <Setter Property="Foreground" Value="{DynamicResource B.ChipOkFg}"/>
+        </Style>
+        <Style x:Key="FiltroCut" TargetType="ToggleButton" BasedOn="{StaticResource ChipFiltro}">
+            <Setter Property="Background" Value="{DynamicResource B.ChipBadBg}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource B.ChipBadBg}"/>
+            <Setter Property="Foreground" Value="{DynamicResource B.ChipBadFg}"/>
+        </Style>
+        <Style x:Key="FiltroWait" TargetType="ToggleButton" BasedOn="{StaticResource ChipFiltro}">
+            <Setter Property="Background" Value="{DynamicResource B.ChipNeutralBg}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource B.Line}"/>
+            <Setter Property="Foreground" Value="{DynamicResource B.ChipNeutralFg}"/>
+        </Style>
+
+        <!-- La barrita de la ventana de tiempo: pista redondeada con la parte llena en color de
+             acento y una perla clara, para que no parezca el control gris de Windows. -->
+        <Style x:Key="BarraVentana" TargetType="Slider">
+            <Setter Property="Minimum" Value="0"/>
+            <!-- Diez posiciones: las del array Ventanas() del código («en vivo», 1, 5, 10, 15, 30,
+                 60, 120, 240 minutos y "todas"). Si se añade un tramo allí, subir este máximo. -->
+            <Setter Property="Maximum" Value="9"/>
+            <Setter Property="TickFrequency" Value="1"/>
+            <Setter Property="IsSnapToTickEnabled" Value="True"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="IsMoveToPointEnabled" Value="True"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Slider">
+                        <Grid Height="20" VerticalAlignment="Center">
+                            <Border Height="6" CornerRadius="3" VerticalAlignment="Center"
+                                    Background="{DynamicResource B.Field}"
+                                    BorderBrush="{DynamicResource B.FieldEdge}" BorderThickness="1"/>
+                            <!-- El Track coloca solo los botones de repetir: el de «bajar» es la
+                                 parte llena de la barra, así que no hace falta medir nada a mano. -->
+                            <Track x:Name="PART_Track">
+                                <Track.Thumb>
+                                    <Thumb>
+                                        <Thumb.Template>
+                                            <ControlTemplate TargetType="Thumb">
+                                                <Ellipse Width="14" Height="14"
+                                                         Fill="{DynamicResource B.Panel}"
+                                                         Stroke="{DynamicResource B.Accent}"
+                                                         StrokeThickness="2"/>
+                                            </ControlTemplate>
+                                        </Thumb.Template>
+                                    </Thumb>
+                                </Track.Thumb>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Command="Slider.IncreaseLarge" Opacity="0"
+                                                  IsTabStop="False" Focusable="False"/>
+                                </Track.IncreaseRepeatButton>
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Command="Slider.DecreaseLarge" Focusable="False">
+                                        <RepeatButton.Template>
+                                            <ControlTemplate TargetType="RepeatButton">
+                                                <Border Height="6" CornerRadius="3"
+                                                        VerticalAlignment="Center"
+                                                        Background="{DynamicResource B.Accent}"/>
+                                            </ControlTemplate>
+                                        </RepeatButton.Template>
+                                    </RepeatButton>
+                                </Track.DecreaseRepeatButton>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="MetricNumber" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="{DynamicResource F.Display}"/>
+            <Setter Property="FontSize" Value="17"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="LineHeight" Value="20"/>
+            <Setter Property="Typography.NumeralAlignment" Value="Tabular"/>
+        </Style>
+        <Style x:Key="MetricLabel" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="{DynamicResource F.Main}"/>
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Opacity" Value="0.85"/>
+            <Setter Property="Margin" Value="0,0,0,0"/>
+        </Style>
+
+        <!-- Un icono dentro de su pastilla cuadrada: se repite en la banda, en el
+             buscador y en la explicación, y así los tres salen iguales de grandes. -->
+        <Style x:Key="GlyphTile" TargetType="Border">
+            <Setter Property="Width" Value="26"/>
+            <Setter Property="Height" Value="26"/>
+            <Setter Property="CornerRadius" Value="{DynamicResource R.Tile}"/>
+            <Setter Property="Background" Value="{DynamicResource B.ChipNeutralBg}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource B.Line}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+
+        <!-- ============================================================
+             FILA DE APLICACIÓN
+             ============================================================
+             Las columnas son las mismas que en la cabecera, así que todo queda
+             alineado al píxel. Lo que cambia respecto al diseño anterior:
+               · Un rail de color a la izquierda dice el permiso de SALIDA sin
+                 haber que leer las pastillas (verde sale, coral cortado, gris
+                 sin decidir).
+               · En vez de raya divisoria, las filas van sueltas sobre el fondo
+                 y se rellenan al pasar el ratón: la lista respira.
+               · Las barritas de PESO crecen de lado (Fx.Fraction) y los números
+                 que cambian dan un aviso de opacidad (Fx.Pulse), que es lo que
+                 hace que se lea el tráfico en marcha sin tener que mirar fijo.
+             La columna del nombre es la flexible: las tres barras divisoras
+             mueven cada una SU columna (Tráfico, Peso, Pastillas) y el hueco que
+             queda lo absorbe el nombre, que siempre puede recortarse con puntos.
+             ============================================================ -->
+        <DataTemplate x:Key="AppRowTemplate">
+            <Border x:Name="row" Margin="3,0,3,3" CornerRadius="{DynamicResource R.Row}">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource B.HoverRow}"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="4"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Rail de estado: el permiso de salida, dicho en color -->
+                    <Border Grid.Column="0" x:Name="rail" Width="3" Margin="1,9,0,9"
+                            HorizontalAlignment="Left" CornerRadius="2"
+                            Background="{Binding Rail}"/>
+
+                    <StackPanel Grid.Column="1">
+                        <Grid Margin="6,4,8,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="24"/>
+                                <ColumnDefinition Width="34"/>
+                                <ColumnDefinition Width="*" MinWidth="140"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="{Binding TrafficCol, Source={x:Static views:ListLayout.Current}}"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="{Binding PesoCol, Source={x:Static views:ListLayout.Current}}"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="{Binding PillCol, Source={x:Static views:ListLayout.Current}}"/>
+                                <ColumnDefinition Width="6"/>
+                                <ColumnDefinition Width="{Binding PillCol, Source={x:Static views:ListLayout.Current}}"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Button Grid.Column="0" x:Name="BtnExpand" Style="{StaticResource ChevronRow}"
+                                    VerticalAlignment="Center" Tag="{Binding}" Click="OnExpand"
+                                    ToolTip="Ver la ruta, el tráfico acumulado y el análisis"
+                                    AutomationProperties.Name="Abrir el detalle de esta aplicación"/>
+
+                            <!-- Icono real del programa; si el exe no expone icono, glifo neutro -->
+                            <Border Grid.Column="1" Width="30" Height="30" CornerRadius="9"
+                                    Background="{DynamicResource B.ChipNeutralBg}"
+                                    BorderBrush="{DynamicResource B.Line}" BorderThickness="1"
+                                    VerticalAlignment="Center">
+                                <Grid>
+                                    <TextBlock Text="&#xE7ED;" FontFamily="{DynamicResource F.Icon}"
+                                               FontSize="15" Foreground="{DynamicResource B.TextFaint}"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    <Image Source="{Binding Icon}" Width="21" Height="21"
+                                           Visibility="{Binding HasIcon, Converter={StaticResource BoolVis}}"/>
+                                </Grid>
+                            </Border>
+
+                            <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="7,0,8,0">
+                                <!-- Rejilla en vez de pila: el nombre va en la columna flexible, así que
+                                     se recorta ÉL antes de empujar fuera las etiquetas de la derecha.
+                                     Dentro de una pila horizontal el texto no se recorta y las etiquetas
+                                     desaparecían con nombres largos. -->
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Ellipse Grid.Column="0" Width="7" Height="7" Fill="{Binding Dot}"
+                                             VerticalAlignment="Center" Margin="0,1,8,0"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding Name}" FontWeight="SemiBold"
+                                               FontSize="{DynamicResource Sz.Name}" TextTrimming="CharacterEllipsis"
+                                               VerticalAlignment="Center"
+                                               Foreground="{DynamicResource B.Text}"/>
+                                    <!-- Analisis de seguridad: justo a la derecha del nombre. El aviso al
+                                         pasar el raton lleva el analisis completo. -->
+                                    <Border Grid.Column="2" Margin="8,1,0,0" CornerRadius="{DynamicResource R.Chip}"
+                                            Padding="6,1" Background="{Binding RiskBg}" VerticalAlignment="Center"
+                                            Visibility="{Binding RiskVisibility}"
+                                            ToolTip="{Binding RiskTip}" ToolTipService.ShowDuration="24000">
+                                        <TextBlock Text="{Binding RiskText}" FontSize="10" FontWeight="SemiBold"
+                                                   Foreground="{Binding RiskFg}"/>
+                                    </Border>
+                                    <Border Grid.Column="3" Margin="6,1,0,0" Style="{StaticResource TagChip}"
+                                            Visibility="{Binding SystemTag}">
+                                        <TextBlock Text="sistema" FontSize="10"
+                                                   Foreground="{DynamicResource B.TextDim}"/>
+                                    </Border>
+                                </Grid>
+                                <!-- La ruta se conserva: es lo que permite reconocer el programa exacto -->
+                                <TextBlock Text="{Binding Folder}" FontSize="{DynamicResource Sz.Folder}"
+                                           Margin="15,1,0,0" HorizontalAlignment="Left"
+                                           TextTrimming="CharacterEllipsis"
+                                           Foreground="{DynamicResource B.TextDim}"/>
+                            </StackPanel>
+
+                            <!-- Tráfico en vivo: lo de ahora arriba, lo acumulado abajo. El
+                                 hueco del medio es elástico para que la pareja de subida pegue
+                                 con el borde derecho de la columna: así la línea de acumulado,
+                                 que es la más ancha de las dos, tiene sitio de sobra y no se
+                                 corta el "GB" de las aplicaciones llevadoras días moviendo. -->
+                            <Grid Grid.Column="4" VerticalAlignment="Center" Margin="0,0,8,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="&#xE896;" FontSize="10"
+                                           FontFamily="{DynamicResource F.Icon}"
+                                           Foreground="{DynamicResource B.Green}" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Rx}"
+                                           c:Fx.Pulse="{Binding Rx}"
+                                           FontSize="{DynamicResource Sz.Num}" FontWeight="SemiBold"
+                                           Margin="4,0,0,0" Typography.NumeralAlignment="Tabular"
+                                           Foreground="{DynamicResource B.Text}"/>
+                                <TextBlock Grid.Row="0" Grid.Column="3" Text="&#xE898;" FontSize="10"
+                                           FontFamily="{DynamicResource F.Icon}"
+                                           Foreground="{DynamicResource B.Amber}" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Row="0" Grid.Column="4" Text="{Binding Tx}"
+                                           c:Fx.Pulse="{Binding Tx}"
+                                           FontSize="{DynamicResource Sz.Num}" FontWeight="SemiBold"
+                                           Margin="4,0,0,0" Typography.NumeralAlignment="Tabular"
+                                           Foreground="{DynamicResource B.Text}"/>
+
+                                <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Text="acumulado"
+                                           FontSize="9.5" Margin="1,1,0,0"
+                                           Foreground="{DynamicResource B.TextFaint}"/>
+                                <StackPanel Grid.Row="1" Grid.Column="3" Grid.ColumnSpan="2"
+                                            Orientation="Horizontal" Margin="0,1,0,0">
+                                    <TextBlock Text="&#xE896;" FontSize="9" VerticalAlignment="Center"
+                                               FontFamily="{DynamicResource F.Icon}"
+                                               Foreground="{DynamicResource B.Green}" Opacity="0.75"/>
+                                    <TextBlock Text="{Binding TotalRx}" FontSize="9.5" Margin="3,0,0,0"
+                                               Typography.NumeralAlignment="Tabular"
+                                               Foreground="{DynamicResource B.TextDim}"/>
+                                    <TextBlock Text="&#xE898;" FontSize="9" Margin="7,0,0,0"
+                                               VerticalAlignment="Center"
+                                               FontFamily="{DynamicResource F.Icon}"
+                                               Foreground="{DynamicResource B.Amber}" Opacity="0.75"/>
+                                    <TextBlock Text="{Binding TotalTx}" FontSize="9.5" Margin="3,0,0,0"
+                                               Typography.NumeralAlignment="Tabular"
+                                               Foreground="{DynamicResource B.TextDim}"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- Barra de PESO: lo que mueve esta aplicación comparado con la que más
+                                 mueve de lo que se está viendo. La longitud la da Fx.Fraction (de 0 a 1
+                                 sobre el ancho de la columna), así que al ensanchar la columna la barra
+                                 se estira sola y al cambiar el valor crece de lado en vez de saltar.
+                                 El hueco se pinta con un fondo transparente y 18 px de alto para que el
+                                 ratón la encuentre sin tener que acertar a cinco píxeles. -->
+                            <Grid Grid.Column="6" Height="18" VerticalAlignment="Center"
+                                  Background="Transparent"
+                                  ToolTip="{Binding BarTip}" ToolTipService.ShowDuration="16000"
+                                  AutomationProperties.Name="Peso en la lista">
+                                <Border Height="6" VerticalAlignment="Center"
+                                        Background="{DynamicResource B.BarTrack}" CornerRadius="3"/>
+                                <Border Height="6" VerticalAlignment="Center" HorizontalAlignment="Stretch"
+                                        CornerRadius="3" Background="{Binding BarBrush}"
+                                        c:Fx.Fraction="{Binding Frac}">
+                                    <Border.RenderTransform>
+                                        <ScaleTransform ScaleX="0"/>
+                                    </Border.RenderTransform>
+                                </Border>
+                            </Grid>
+
+                            <!-- Las dos píldoras son desplegables: al pulsarlas sale su menú de permiso -->
+                            <Button Grid.Column="8" x:Name="PillOut" Style="{Binding OutPill}"
+                                    Content="{Binding}" Tag="{Binding}" Click="OnOutPill"
+                                    ToolTip="{Binding OutTip}" HorizontalAlignment="Stretch" Height="30"
+                                    AutomationProperties.Name="{Binding OutAuto}">
+                                <Button.ContentTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding OutGlyph}" FontSize="11" FontWeight="Bold"
+                                                       Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding OutText}"/>
+                                            <TextBlock Text="&#xE70D;" FontSize="8" Margin="6,3,0,0"
+                                                       FontFamily="{DynamicResource F.Icon}"
+                                                       Opacity="0.7"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </Button.ContentTemplate>
+                            </Button>
+
+                            <Button Grid.Column="10" x:Name="PillIn" Style="{Binding InPill}"
+                                    Content="{Binding}" Tag="{Binding}" Click="OnInPill"
+                                    ToolTip="{Binding InTip}" HorizontalAlignment="Stretch" Height="30"
+                                    AutomationProperties.Name="{Binding InAuto}">
+                                <Button.ContentTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding InGlyph}" FontSize="11" FontWeight="Bold"
+                                                       Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding InText}"/>
+                                            <TextBlock Text="&#xE70D;" FontSize="8" Margin="6,3,0,0"
+                                                       FontFamily="{DynamicResource F.Icon}"
+                                                       Opacity="0.7"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </Button.ContentTemplate>
+                            </Button>
+                        </Grid>
+
+                        <!-- Detalle desplegable: ruta, acumulado, destinos y análisis. Se recoloca
+                             al abrir (eso no hay manera de evitarlo), así que aquí solo se anima la
+                             opacidad, que es lo que no cuesta trabajo. -->
+                        <Border x:Name="det" Margin="34,7,6,8" Padding="14,11"
+                                CornerRadius="{DynamicResource R.Panel}"
+                                Background="{DynamicResource B.Raised}"
+                                BorderBrush="{DynamicResource B.Line}" BorderThickness="1"
+                                Visibility="{Binding DetailVisibility}">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Style.Triggers>
+                                        <Trigger Property="Visibility" Value="Visible">
+                                            <Trigger.EnterActions>
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                         From="0.2" To="1" Duration="0:0:0.22">
+                                                            <DoubleAnimation.EasingFunction>
+                                                                <CubicEase EasingMode="EaseOut"/>
+                                                            </DoubleAnimation.EasingFunction>
+                                                        </DoubleAnimation>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </Trigger.EnterActions>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="3"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Border Grid.Column="0" Width="3" CornerRadius="2" Margin="0,1"
+                                        HorizontalAlignment="Left"
+                                        Background="{DynamicResource B.AuroraLine}"/>
+                                <StackPanel Grid.Column="1" Margin="12,0,0,0">
+                                    <TextBlock Text="{Binding DetailTraffic}" FontSize="12" TextWrapping="Wrap"
+                                               LineHeight="17" Foreground="{DynamicResource B.Text}"/>
+                                    <TextBlock Text="{Binding DetailPath}" FontSize="11.5" Margin="0,6,0,0"
+                                               TextWrapping="Wrap" LineHeight="16"
+                                               Foreground="{DynamicResource B.TextDim}"/>
+                                    <Border Margin="0,9,0,0" Padding="11,8"
+                                            CornerRadius="{DynamicResource R.Tile}"
+                                            Background="{DynamicResource B.Panel}"
+                                            BorderBrush="{DynamicResource B.Line}" BorderThickness="1">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="&#xE92D;" FontSize="13" VerticalAlignment="Top"
+                                                       Margin="0,1,9,0"
+                                                       FontFamily="{DynamicResource F.Icon}"
+                                                       Foreground="{Binding RiskBrush}"/>
+                                            <TextBlock Text="{Binding DetailRisk}" FontSize="11.5"
+                                                       TextWrapping="Wrap" LineHeight="16" MaxWidth="820"
+                                                       Foreground="{Binding RiskBrush}"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <!-- Lo que PCJ escribe de más en esta aplicación, dicho en una
+                                         línea. Solo aparece si tiene configuración adicional, para
+                                         que una fila normal no ocupe dos renglones de más. -->
+                                    <TextBlock Text="{Binding AjusteLine}" FontSize="11.5" Margin="0,7,0,0"
+                                               TextWrapping="Wrap" LineHeight="16"
+                                               Foreground="{DynamicResource B.Amber}"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,11,0,0">
+                                        <Button Style="{StaticResource GhostButton}" Content="Abrir carpeta"
+                                                FontSize="11" Padding="11,5" Margin="0,0,6,0"
+                                                Tag="{Binding}" Click="OnOpenFolder"/>
+                                        <Button Style="{StaticResource GhostButton}" Content="Copiar ruta"
+                                                FontSize="11" Padding="11,5" Margin="0,0,6,0"
+                                                Tag="{Binding}" Click="OnCopyPath"/>
+                                        <Button Style="{StaticResource GhostButton}"
+                                                Content="Que vuelva a preguntar" FontSize="11" Padding="11,5"
+                                                Margin="0,0,6,0"
+                                                Tag="{Binding}" Click="OnAskAgain"
+                                                ToolTip="Vuelve a mostrar la ventana flotante la próxima vez que abras este programa"/>
+                                        <!-- El mando fino, al lado del de siempre. Sale con la ventana
+                                             de los cinco modos de salida y los dos refuerzos. -->
+                                        <Button Style="{StaticResource GhostButton}" FontSize="11"
+                                                Padding="11,5" Tag="{Binding}" Click="OnAjusteApp"
+                                                ToolTip="Elegir cómo sale esta aplicación: solo por unos puertos, cortada del todo, restringida a la red local, o lo mismo para sus procesos hijo">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="&#xE713;" FontSize="11.5" Margin="0,0,6,0"
+                                                           VerticalAlignment="Center"
+                                                           FontFamily="{DynamicResource F.Icon}"/>
+                                                <TextBlock Text="Configuración adicional"/>
+                                            </StackPanel>
+                                        </Button>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <DockPanel>
+        <!-- ============================================================
+             BANDA DE MANDO
+             ============================================================
+             Una sola línea: a la izquierda qué está pasando (escudo, título,
+             estado y el punto en directo), a la derecha los cinco mandos. Los
+             recuentos se fueron de aquí a la franja de medidores, que es donde
+             se leen junto a la lista que describen. -->
+        <Border DockPanel.Dock="Top" CornerRadius="{DynamicResource R.Card}"
+                BorderBrush="{DynamicResource B.BannerEdge}" BorderThickness="1"
+                Background="{DynamicResource B.Banner}" Margin="0,0,0,10">
+            <Grid x:Name="BandaGrid" Margin="14,10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Identidad. Es una rejilla y no una pila horizontal porque la pila no recorta:
+                     cada hijo pide lo suyo y, si la columna se queda estrecha, se sale de ella y
+                     pinta debajo de los mandos —así es como el chip «en directo» se plantaba
+                     encima de «Elegir apps» (lo vio el autor en su pantalla). Aquí el escudo va
+                     entero y el texto es lo que cede; ClipToBounds es la red, y el lastre por
+                     pasos de abajo es lo que evita tener que recortar. -->
+                <Grid x:Name="BandaIzq" Grid.Column="0" VerticalAlignment="Center" ClipToBounds="True">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Border Width="40" Height="40" CornerRadius="12" Background="{DynamicResource B.AuroraFill}"
+                            BorderBrush="{DynamicResource B.BannerChipEdge}" BorderThickness="1">
+                        <Grid>
+                            <!-- El brillo que late debajo del escudo: solo respira mientras la
+                                 pestaña está a la vista, y anima tamaño y opacidad, nunca el color
+                                 de un pincel de la paleta (que es compartido por toda la app).
+                                 El ScaleTransform va puesto en el propio elemento, no en un
+                                 Setter, para que no se congele y se pueda animar. -->
+                            <Ellipse Width="10" Height="10" Opacity="0" HorizontalAlignment="Center"
+                                     VerticalAlignment="Center" Fill="{DynamicResource B.Green}"
+                                     RenderTransformOrigin="0.5,0.5">
+                                <Ellipse.RenderTransform>
+                                    <ScaleTransform ScaleX="1" ScaleY="1"/>
+                                </Ellipse.RenderTransform>
+                                <Ellipse.Style>
+                                    <Style TargetType="Ellipse">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsVisible, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
+                                                <DataTrigger.EnterActions>
+                                                    <BeginStoryboard Name="LateLatido">
+                                                        <Storyboard>
+                                                            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                             From="0.5" To="0"
+                                                                             Duration="0:0:1.8"
+                                                                             RepeatBehavior="Forever"/>
+                                                            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleX"
+                                                                             From="1" To="3"
+                                                                             Duration="0:0:1.8"
+                                                                             RepeatBehavior="Forever"/>
+                                                            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleY"
+                                                                             From="1" To="3"
+                                                                             Duration="0:0:1.8"
+                                                                             RepeatBehavior="Forever"/>
+                                                        </Storyboard>
+                                                    </BeginStoryboard>
+                                                </DataTrigger.EnterActions>
+                                                <DataTrigger.ExitActions>
+                                                    <StopStoryboard BeginStoryboardName="LateLatido"/>
+                                                </DataTrigger.ExitActions>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Ellipse.Style>
+                            </Ellipse>
+                            <TextBlock x:Name="ShieldIcon" Text="&#xE72E;" FontSize="20"
+                                       FontFamily="{DynamicResource F.Icon}"
+                                       Foreground="{DynamicResource B.Teal}"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Grid>
+                    </Border>
+                    <Grid x:Name="BandaTexto" Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal">
+                            <TextBlock x:Name="TxtBandaTitulo" Text="Protección del firewall" FontSize="15" FontWeight="SemiBold"
+                                       FontFamily="{DynamicResource F.Display}"
+                                       Foreground="{DynamicResource B.BannerText}"/>
+                            <Border x:Name="ChipDirecto" Margin="10,1,0,0" Padding="7,2" CornerRadius="9"
+                                    Background="{DynamicResource B.BannerChip}"
+                                    BorderBrush="{DynamicResource B.BannerChipEdge}" BorderThickness="1"
+                                    VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal">
+                                    <Ellipse Width="6" Height="6" Fill="{DynamicResource B.Green}"
+                                             VerticalAlignment="Center"/>
+                                    <TextBlock Text="en directo" FontSize="10" FontWeight="SemiBold"
+                                               Margin="5,0,0,0" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource B.BannerAccent}"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                        <!-- Sin MaxWidth: la línea ya se aprieta sola contra el borde de su
+                             columna, y el recorte con puntos suspensivos está puesto. -->
+                        <TextBlock x:Name="TxtStatus" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                                   TextTrimming="CharacterEllipsis"
+                                   Text="Sin bloqueo total — cada aplicación sale libremente salvo las que bloquees tú"
+                                   FontSize="11.5" Foreground="{DynamicResource B.BannerTextDim}"
+                                   Margin="0,2,0,0"/>
+                    </Grid>
+                </Grid>
+
+                <!-- Los mandos, en línea y agrupados por qué hacen -->
+                <StackPanel x:Name="BandaDer" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button x:Name="BtnAccess" Style="{StaticResource OnDarkButton}" Content="Elegir apps"
+                            Click="OnOpenAccess" Margin="0,0,7,0" FontSize="11.5" Padding="11,6"
+                            ToolTip="Repasar qué aplicaciones tienen salida permitida"/>
+                    <Button x:Name="BtnAdd" Style="{StaticResource OnDarkButton}" Content="Añadir…"
+                            Click="OnAddApp" Margin="0,0,7,0" FontSize="11.5" Padding="11,6"
+                            ToolTip="Elige un .exe con el explorador para poder darle o quitarle la salida, aunque el monitor no lo vea"/>
+                    <Button x:Name="BtnReask" Style="{StaticResource OnDarkButton}" Content="Repreguntar"
+                            Click="OnReask" Margin="0,0,7,0" FontSize="11.5" Padding="11,6"
+                            Visibility="Collapsed"
+                            ToolTip="Mete otra vez en la cola de avisos los programas que están abiertos y no tienen decisión, por si cerraste los avisos sin responder"/>
+                    <Button x:Name="BtnCleanup" Style="{StaticResource OnDarkButton}" Content="Limpiar reglas"
+                            Click="OnCleanup" FontSize="11.5" Padding="11,6"/>
+
+                    <Grid Margin="16,0,0,0">
+                        <Button x:Name="BtnMode" Style="{StaticResource ModeButton}"
+                                Click="OnModeButton" MinWidth="190" Padding="11,6"
+                                AutomationProperties.Name="Modo de firewall"
+                                ToolTip="Modo de firewall: qué hace PCJ con un programa que no tiene regla de salida">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock x:Name="ModeIcon" Text="&#xE946;" FontSize="14"
+                                           FontFamily="{DynamicResource F.Icon}"
+                                           Foreground="{DynamicResource B.Teal}" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="ModeLabel" Text="Avisar sin cortar" FontSize="12.5"
+                                           FontWeight="SemiBold" Foreground="{DynamicResource B.BannerText}"
+                                           Margin="8,0,0,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="&#xE70D;" FontSize="10" Margin="9,3,0,0"
+                                           FontFamily="{DynamicResource F.Icon}"
+                                           Foreground="{DynamicResource B.BannerTextFaint}"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- El desplegable de modos va sobre la misma banda: fondo de degradado
+                             oscuro y letra clara, para que no parezca un menú de Windows pegado. -->
+                        <Popup x:Name="ModePopup" PlacementTarget="{Binding ElementName=BtnMode}"
+                               Placement="Bottom" VerticalOffset="6" StaysOpen="False"
+                               AllowsTransparency="True" PopupAnimation="Fade">
+                            <Border Background="{DynamicResource B.Banner}" BorderBrush="{DynamicResource B.BannerEdge}"
+                                    BorderThickness="1" CornerRadius="12" Padding="5" MinWidth="346">
+                                <Border.Effect>
+                                    <DropShadowEffect BlurRadius="18" ShadowDepth="4" Opacity="0.55"
+                                                      Color="#000000"/>
+                                </Border.Effect>
+                                <StackPanel>
+                                    <Button Style="{StaticResource ModeItem}" Tag="0" Click="OnPickMode">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="26"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="&#xE946;" FontSize="15"
+                                                       FontFamily="{DynamicResource F.Icon}"
+                                                       Foreground="{DynamicResource B.Teal}"
+                                                       VerticalAlignment="Center"/>
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Text="Avisar sin cortar" FontSize="12.5"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource B.BannerText}"/>
+                                                <TextBlock FontSize="11" TextWrapping="Wrap" Margin="0,1,10,0"
+                                                           Foreground="{DynamicResource B.BannerTextFaint}"
+                                                           Text="Windows no corta nada. PCJ te avisa cuando un programa nuevo sale a internet, para que decidas."/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Button>
+                                    <Button Style="{StaticResource ModeItem}" Tag="1" Click="OnPickMode">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="26"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="&#xE73E;" FontSize="15"
+                                                       FontFamily="{DynamicResource F.Icon}"
+                                                       Foreground="{DynamicResource B.Green}"
+                                                       VerticalAlignment="Center"/>
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Text="Preguntar para conectar" FontSize="12.5"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource B.BannerText}"/>
+                                                <TextBlock FontSize="11" TextWrapping="Wrap" Margin="0,1,10,0"
+                                                           Foreground="{DynamicResource B.BannerTextFaint}"
+                                                           Text="Bloqueo total con avisos: el que no tiene permiso no sale hasta que tú lo dejes. Pregunta también por los que ya estaban abiertos, uno cada vez."/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Button>
+                                    <Button Style="{StaticResource ModeItem}" Tag="2" Click="OnPickMode">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="26"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="&#xE711;" FontSize="15"
+                                                       FontFamily="{DynamicResource F.Icon}"
+                                                       Foreground="{DynamicResource B.Coral}"
+                                                       VerticalAlignment="Center"/>
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Text="Bloquear a todos" FontSize="12.5"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource B.BannerText}"/>
+                                                <TextBlock FontSize="11" TextWrapping="Wrap" Margin="0,1,10,0"
+                                                           Foreground="{DynamicResource B.BannerTextFaint}"
+                                                           Text="Bloqueo total sin avisos: solo salen las aplicaciones a las que hayas dado permiso."/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Button>
+                                    <!-- La cuarta opción no es un modo: borra lo respondido para que
+                                         PCJ vuelva a preguntar app por app. Va en este mismo menú
+                                         porque es la salida cuando el modo ya elegido no cuadra con
+                                         lo que se respondió en otro equipo. -->
+                                    <Button Style="{StaticResource ModeItem}" Click="OnForgetDecisions">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="26"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="&#xE74D;" FontSize="15"
+                                                       FontFamily="{DynamicResource F.Icon}"
+                                                       Foreground="{DynamicResource B.Coral}"
+                                                       VerticalAlignment="Center"/>
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Text="Borrar todas las decisiones" FontSize="12.5"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource B.BannerText}"/>
+                                                <TextBlock FontSize="11" TextWrapping="Wrap" Margin="0,1,10,0"
+                                                           Foreground="{DynamicResource B.BannerTextFaint}"
+                                                           Text="Olvida cada «permitir» y cada «bloquear» que hayas dado: PCJ volverá a preguntar por cada aplicación. No borra el tráfico medido, las excepciones del sistema ni la configuración adicional."/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Button>
+                                </StackPanel>
+                            </Border>
+                        </Popup>
+                    </Grid>
+
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="18,0,0,0">
+                        <TextBlock x:Name="TxtPalabraBloqueo" Text="Bloqueo total" FontSize="11.5"
+                                   Foreground="{DynamicResource B.BannerTextFaint}"
+                                   VerticalAlignment="Center" Margin="0,0,9,0"/>
+                        <CheckBox x:Name="SwStrict" Style="{StaticResource Switch}" Click="OnSwitch"
+                                  AutomationProperties.Name="Bloqueo total"
+                                  ToolTip="Cortar toda la salida y dejar pasar solo las aplicaciones con permiso"/>
+                        <TextBlock x:Name="SwLabel" Text="Apagado" FontSize="12" FontWeight="SemiBold"
+                                   Margin="9,0,0,0" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource B.BannerTextDim}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Aviso: hay programas que este monitor no puede ver por no tener permisos.
+                 Va marcado con un rail ámbar a la izquierda en vez de pintar el recuadro
+                 entero de crema, que en un tema oscuro saldría ilegible. -->
+        <Border x:Name="HiddenNotice" DockPanel.Dock="Top" Margin="0,0,0,10" Padding="0"
+                CornerRadius="{DynamicResource R.Card}" Background="{DynamicResource B.Panel}"
+                BorderBrush="{DynamicResource B.Line}" BorderThickness="1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="4"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Border Grid.Column="0" Width="4" CornerRadius="2" Background="{DynamicResource B.Amber}"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="13,10,10,10"
+                            VerticalAlignment="Center">
+                    <Border Style="{StaticResource GlyphTile}" Background="{DynamicResource B.ChipWarnBg}"
+                            BorderBrush="{DynamicResource B.ChipWarnBg}" VerticalAlignment="Top">
+                        <TextBlock Text="&#xE7BA;" FontFamily="{DynamicResource F.Icon}" FontSize="15"
+                                   Foreground="{DynamicResource B.Amber}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <TextBlock x:Name="TxtHidden" Margin="11,1,0,0" MaxWidth="820" FontSize="12"
+                               TextWrapping="Wrap" LineHeight="17" VerticalAlignment="Center"
+                               Foreground="{DynamicResource B.Text}"/>
+                </StackPanel>
+                <Button Grid.Column="2" x:Name="BtnElevate" Style="{StaticResource GhostButton}"
+                        Content="Reiniciar como administrador" FontSize="11" Margin="0,0,12,0"
+                        VerticalAlignment="Center" Click="OnElevate"/>
+            </Grid>
+        </Border>
+
+        <!-- ============================================================
+             FRANJA DE MEDIDORES + EXPLICACIÓN
+             ============================================================
+             Los cuatro recuentos van aquí, justo encima de la lista que describen,
+             y a su derecha el mando de la explicación: la franja hace de cabecera
+             de la lista y a la vez guarda el desplegable de «qué es la salida». -->
+        <Border DockPanel.Dock="Top" Margin="0,0,0,10" Padding="0"
+                CornerRadius="{DynamicResource R.Card}" Background="{DynamicResource B.Panel}"
+                BorderBrush="{DynamicResource B.Edge}" BorderThickness="1">
+            <StackPanel>
+                <Grid Margin="13,10,14,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Los cuatro recuentos, que a la vez son los cuatro filtros -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal">
+                        <ToggleButton x:Name="FiltroRun" Style="{StaticResource FiltroRun}"
+                                      Checked="OnFiltroEstado" Unchecked="OnFiltroEstado"
+                                      ToolTip="Pincha para ver solo las que están abiertas ahora mismo"
+                                      ToolTipService.ShowDuration="16000">
+                            <StackPanel>
+                                <TextBlock x:Name="StatRun" Text="0" Style="{StaticResource MetricNumber}"/>
+                                <TextBlock Text="en ejecución" Style="{StaticResource MetricLabel}"/>
+                            </StackPanel>
+                        </ToggleButton>
+                        <ToggleButton x:Name="FiltroOk" Style="{StaticResource FiltroOk}" Margin="8,0,0,0"
+                                      Checked="OnFiltroEstado" Unchecked="OnFiltroEstado"
+                                      ToolTip="Salida permitida: tienen una regla tuya que las deja conectar. Pincha para quedarte solo con ellas"
+                                      ToolTipService.ShowDuration="16000">
+                            <StackPanel>
+                                <TextBlock x:Name="StatAllowed" Text="0" Style="{StaticResource MetricNumber}"/>
+                                <TextBlock Text="permitidas" Style="{StaticResource MetricLabel}"/>
+                            </StackPanel>
+                        </ToggleButton>
+                        <ToggleButton x:Name="FiltroCut" Style="{StaticResource FiltroCut}" Margin="8,0,0,0"
+                                      Checked="OnFiltroEstado" Unchecked="OnFiltroEstado"
+                                      ToolTip="Salida cortada: no pueden conectar hasta que les des permiso. Pincha para ver solo las cortadas"
+                                      ToolTipService.ShowDuration="16000">
+                            <StackPanel>
+                                <TextBlock x:Name="StatCut" Text="0" Style="{StaticResource MetricNumber}"/>
+                                <TextBlock Text="bloqueadas" Style="{StaticResource MetricLabel}"/>
+                            </StackPanel>
+                        </ToggleButton>
+                        <ToggleButton x:Name="FiltroWait" Style="{StaticResource FiltroWait}" Margin="8,0,0,0"
+                                      Checked="OnFiltroEstado" Unchecked="OnFiltroEstado"
+                                      ToolTip="Sin ninguna regla tuya: lo que hace con ellas Windows o el bloqueo total, según el modo. Pincha para ver solo esas"
+                                      ToolTipService.ShowDuration="16000">
+                            <StackPanel>
+                                <TextBlock x:Name="StatWait" Text="0" Style="{StaticResource MetricNumber}"/>
+                                <TextBlock Text="sin decidir" Style="{StaticResource MetricLabel}"/>
+                            </StackPanel>
+                        </ToggleButton>
+                    </StackPanel>
+
+                    <!-- Perfil de firewall: en el hueco entre los recuentos y la explicación va
+                     un solo botón que abre un panel flotante. Ahí se elige, aplica, crea o borra
+                     un perfil de un clic, sin saturar la barra. Crear/guardar no toca ninguna
+                     regla; aplicar un perfil sí cambia la política de salida (pide administrador),
+                     igual que en «Perfiles y candado». -->
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="16,0,8,0"
+                                HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <StackPanel VerticalAlignment="Center" Margin="0,0,12,0">
+                            <TextBlock Text="Perfil de firewall" FontSize="12.5" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource B.Text}"/>
+                            <TextBlock Text="Elegir, aplicar o crear" FontSize="10.5"
+                                       Margin="0,1,0,0" Foreground="{DynamicResource B.TextDim}"/>
+                        </StackPanel>
+                        <Button x:Name="BtnPerfilCrear" Style="{StaticResource GhostButton}"
+                                VerticalAlignment="Center" Click="OnPerfilAbrir"
+                                AutomationProperties.Name="Abrir los perfiles de firewall">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE774;" FontSize="13" Margin="0,1,8,0"
+                                           FontFamily="{DynamicResource F.Icon}"
+                                           Foreground="{DynamicResource B.Accent}" VerticalAlignment="Center"/>
+                                <TextBlock Text="Perfiles" VerticalAlignment="Center"/>
+                                <TextBlock Text="&#xE70D;" FontSize="11" Margin="9,2,0,0"
+                                           FontFamily="{DynamicResource F.Icon}"
+                                           Foreground="{DynamicResource B.TextDim}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+
+                    <!-- Panel flotante de perfiles -->
+                    <Popup x:Name="PerfilPopup" Grid.Column="1"
+                           PlacementTarget="{Binding ElementName=BtnPerfilCrear}" Placement="Bottom"
+                           StaysOpen="False" PopupAnimation="Fade" AllowsTransparency="True"
+                           HorizontalOffset="-250" VerticalOffset="6"
+                           Opened="OnPerfilPopupOpened" Closed="OnPerfilPopupClosed">
+                        <Grid Margin="16">
+                            <Border Width="372" CornerRadius="{DynamicResource R.Card}"
+                                    Background="{DynamicResource B.Panel}"
+                                    BorderBrush="{DynamicResource B.Edge}" BorderThickness="1">
+                                <Border.Effect>
+                                    <DropShadowEffect BlurRadius="24" ShadowDepth="5" Opacity="0.38" Color="#000000"/>
+                                </Border.Effect>
+                                <StackPanel Margin="15,13,15,13">
+                                    <!-- Cabecera -->
+                                    <Grid Margin="0,0,0,2">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="Perfiles de firewall" FontSize="14" FontWeight="Bold"
+                                                       Foreground="{DynamicResource B.Text}"/>
+                                            <TextBlock Text="Aplica uno de un clic, o guarda el estado actual"
+                                                       FontSize="11" Margin="0,2,0,0"
+                                                       Foreground="{DynamicResource B.TextDim}"/>
+                                        </StackPanel>
+                                        <Button Grid.Column="1" x:Name="BtnPerfilCerrar"
+                                                Style="{StaticResource PlainButton}" Width="28" Height="28"
+                                                Click="OnPerfilCerrar" ToolTip="Cerrar"
+                                                AutomationProperties.Name="Cerrar el panel de perfiles">
+                                            <TextBlock Text="&#xE8BB;" FontSize="12" FontFamily="{DynamicResource F.Icon}"
+                                                       Foreground="{DynamicResource B.TextDim}"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Button>
+                                    </Grid>
+
+                                    <!-- Estado actual -->
+                                    <Border CornerRadius="{DynamicResource R.Button}" Margin="0,8,0,8"
+                                            Padding="10,7" Background="{DynamicResource B.Raised}"
+                                            BorderBrush="{DynamicResource B.Line}" BorderThickness="1">
+                                        <TextBlock x:Name="PerfilEstado" FontSize="11.5" TextWrapping="Wrap"
+                                                   Foreground="{DynamicResource B.TextDim}"/>
+                                    </Border>
+
+                                    <!-- La lista de perfiles, construida por código -->
+                                    <ScrollViewer MaxHeight="248" VerticalScrollBarVisibility="Auto"
+                                                  HorizontalScrollBarVisibility="Disabled">
+                                        <StackPanel x:Name="PerfilLista"/>
+                                    </ScrollViewer>
+                                    <TextBlock x:Name="PerfilVacio" FontSize="11.5" TextWrapping="Wrap"
+                                               Visibility="Collapsed" Margin="2,4,2,4"
+                                               Foreground="{DynamicResource B.TextDim}"
+                                               Text="Aún no hay perfiles. Guarda el estado actual abajo para crear el primero."/>
+
+                                    <Border Height="1" Margin="0,10,0,10" Background="{DynamicResource B.Line}"/>
+
+                                    <!-- Crear desde el estado actual -->
+                                    <TextBlock Text="Crear perfil con la salida de ahora" FontSize="11.5"
+                                               FontWeight="SemiBold" Margin="0,0,0,6"
+                                               Foreground="{DynamicResource B.Text}"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox Grid.Column="0" x:Name="TxtNuevoPerfil" MaxLength="48"
+                                                 VerticalContentAlignment="Center" FontSize="12.5" Padding="9,6"
+                                                 Background="{DynamicResource B.Raised}"
+                                                 Foreground="{DynamicResource B.Text}"
+                                                 BorderBrush="{DynamicResource B.Edge}" BorderThickness="1"
+                                                 ToolTip="Nombre reconocible, por ejemplo «Casa» o «Trabajo»"/>
+                                        <Button Grid.Column="1" x:Name="BtnNuevoGuardar"
+                                                Style="{StaticResource GhostButton}" Content="Guardar"
+                                                FontSize="12" Padding="13,7" Margin="8,0,0,0"
+                                                Click="OnPerfilGuardar"
+                                                AutomationProperties.Name="Guardar el estado actual como perfil nuevo"/>
+                                    </Grid>
+
+                                    <!-- Salir del bloqueo -->
+                                    <Button x:Name="BtnModoNormal" Style="{StaticResource GhostButton}"
+                                            Content="Volver al modo normal" FontSize="11.5" Padding="12,6"
+                                            Margin="0,10,0,0" HorizontalAlignment="Left"
+                                            Click="OnPerfilModoNormal"
+                                            ToolTip="Quita el bloqueo total: cada app sale según sus reglas"
+                                            AutomationProperties.Name="Volver al modo normal"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Popup>
+
+                    <!-- La explicación, plegada, a la derecha -->
+                    <Button Grid.Column="2" x:Name="BtnLegend" Style="{StaticResource PlainButton}"
+                            Click="OnToggleLegend" VerticalAlignment="Center"
+                            AutomationProperties.Name="Explicación de entrada y salida">
+                        <StackPanel Orientation="Horizontal">
+                            <Border Style="{StaticResource GlyphTile}" Background="{DynamicResource B.Selected}"
+                                    BorderBrush="{DynamicResource B.SelectedEdge}">
+                                <TextBlock Text="&#xE946;" FontSize="13"
+                                           FontFamily="{DynamicResource F.Icon}"
+                                           Foreground="{DynamicResource B.Accent}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="¿Qué significan «salida» y «entrada»?" FontSize="12.5"
+                                       FontWeight="SemiBold" Margin="10,0,0,0" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource B.Text}"/>
+                            <TextBlock x:Name="LegendChevron" Text="&#xE70D;" FontSize="11" Margin="9,2,0,0"
+                                       VerticalAlignment="Center" FontFamily="{DynamicResource F.Icon}"
+                                       Foreground="{DynamicResource B.TextDim}"/>
+                        </StackPanel>
+                    </Button>
+                </Grid>
+
+                <!-- Al abrir la explicación, la diferencia entre las dos direcciones se
+                     despliega debajo de los medidores: así no le quita altura a la lista
+                     hasta que de verdad se pide. -->
+                <Border x:Name="LegendBody" Visibility="Collapsed" BorderBrush="{DynamicResource B.Line}"
+                        BorderThickness="0,1,0,0" Padding="14,12"
+                        Background="{DynamicResource B.Raised}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Salida -->
+                        <Border Grid.Column="0" CornerRadius="{DynamicResource R.Panel}"
+                                Background="{DynamicResource B.Panel}"
+                                BorderBrush="{DynamicResource B.Line}" BorderThickness="1" Padding="13,11">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <Border Style="{StaticResource GlyphTile}"
+                                            Background="{DynamicResource B.ChipOkBg}"
+                                            BorderBrush="{DynamicResource B.ChipOkBg}">
+                                        <TextBlock Text="&#xE898;" FontSize="13"
+                                                   FontFamily="{DynamicResource F.Icon}"
+                                                   Foreground="{DynamicResource B.Green}"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" FontSize="12"
+                                               Foreground="{DynamicResource B.Text}"><Run Text="SALIDA" FontWeight="Bold"/><Run Text=" · lo que el programa manda a internet"/></TextBlock>
+                                </StackPanel>
+                                <TextBlock Margin="0,9,0,0" FontSize="11.5" TextWrapping="Wrap" LineHeight="17"
+                                           Foreground="{DynamicResource B.TextDim}">
+                                    <Run Text="Si la cortas el programa no abre ninguna conexión: no carga páginas, no actualiza, no avisa. "/>
+                                    <Run Text="Es la que de verdad apaga una aplicación." FontWeight="SemiBold"/>
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Entrada -->
+                        <Border Grid.Column="2" CornerRadius="{DynamicResource R.Panel}"
+                                Background="{DynamicResource B.Panel}"
+                                BorderBrush="{DynamicResource B.Line}" BorderThickness="1" Padding="13,11">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <Border Style="{StaticResource GlyphTile}"
+                                            Background="{DynamicResource B.ChipInfoBg}"
+                                            BorderBrush="{DynamicResource B.ChipInfoBg}">
+                                        <TextBlock Text="&#xE896;" FontSize="13"
+                                                   FontFamily="{DynamicResource F.Icon}"
+                                                   Foreground="{DynamicResource B.Indigo}"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" FontSize="12"
+                                               Foreground="{DynamicResource B.Text}"><Run Text="ENTRADA" FontWeight="Bold"/><Run Text=" · lo que otros equipos piden a tu PC"/></TextBlock>
+                                </StackPanel>
+                                <TextBlock Margin="0,9,0,0" FontSize="11.5" TextWrapping="Wrap" LineHeight="17"
+                                           Foreground="{DynamicResource B.TextDim}">
+                                    <Run Text="Si la cortas, nadie desde la red se conecta a ese programa; tu navegación sigue igual. "/>
+                                    <Run Text="Windows ya la corta por defecto." FontWeight="SemiBold"/>
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Clave de las pastillas -->
+                        <Border Grid.Column="4" Width="232" CornerRadius="{DynamicResource R.Panel}"
+                                Background="{DynamicResource B.Panel}"
+                                BorderBrush="{DynamicResource B.Line}" BorderThickness="1" Padding="13,11">
+                            <StackPanel>
+                                <TextBlock Text="PASTILLAS DE LA LISTA" FontSize="10.5" FontWeight="Bold"
+                                           Foreground="{DynamicResource B.TextDim}"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                    <Border Height="22" Padding="9,0" CornerRadius="11"
+                                            Background="{DynamicResource B.GreenFill}"
+                                            BorderBrush="{DynamicResource B.ChipOkFg}" BorderThickness="1">
+                                        <TextBlock Text="Permitido" FontSize="11" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource B.OnAccent}"
+                                                   VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Text="puede pasar" FontSize="11" Margin="8,0,0,0"
+                                               VerticalAlignment="Center"
+                                               Foreground="{DynamicResource B.TextDim}"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                                    <Border Height="22" Padding="9,0" CornerRadius="11"
+                                            Background="{DynamicResource B.SlateFill}"
+                                            BorderBrush="{DynamicResource B.Slate}" BorderThickness="1">
+                                        <TextBlock Text="Bloqueado" FontSize="11" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource B.OnAccent}"
+                                                   VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Text="no puede pasar" FontSize="11" Margin="8,0,0,0"
+                                               VerticalAlignment="Center"
+                                               Foreground="{DynamicResource B.TextDim}"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                                    <Border Height="22" Padding="9,0" CornerRadius="11"
+                                            Background="{DynamicResource B.Panel}"
+                                            BorderBrush="{DynamicResource B.Edge}" BorderThickness="1">
+                                        <TextBlock Text="Sin decidir" FontSize="11" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource B.TextDim}"
+                                                   VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Text="púlsala para elegir" FontSize="11" Margin="8,0,0,0"
+                                               VerticalAlignment="Center"
+                                               Foreground="{DynamicResource B.TextDim}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Border>
+            </StackPanel>
+        </Border>
+
+        <!-- ============================================================
+             LISTA DE APLICACIONES
+             ============================================================ -->
+        <Border Style="{StaticResource Card}" Padding="11,11">
+            <DockPanel>
+                <!-- Cabecera de la tarjeta: título a la izquierda; grupo y buscador a la derecha -->
+                <Grid x:Name="CabeceraLista" DockPanel.Dock="Top" Margin="3,0,3,10"
+                      SizeChanged="OnCabeceraAjuste">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <!-- Lo que hay a la izquierda del selector de grupo. Es una rejilla y no una
+                         fila de StackPanel a propósito: el StackPanel le pide a cada hijo su
+                         ancho completo, así que cuando el título se alarga («68 aplicaciones ·
+                         en ejecución») o la ventana se estrecha, el chip de la ventana de minutos
+                         desbordaba su columna y se plantaba encima de «Todas / Mis apps». Aquí el
+                         único que se aprieta es el título, que recorta con puntos suspensivos.
+                         La última columna no es un adorno: es el colchón que separa el chip del
+                         selector aunque el título ya no quepa. Y si aun así se aprieta demasiado,
+                         OnCabeceraAjuste suelta lastre (la palabra «Refrescar», el ancho de la
+                         barra y el del buscador) en vez de dejar que las cosas se solapen. -->
+                    <Grid x:Name="CabeceraIzq" Grid.Column="0" VerticalAlignment="Center">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*" MinWidth="84"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" x:Name="IzqTile" Style="{StaticResource GlyphTile}"
+                                Background="{DynamicResource B.Selected}"
+                                BorderBrush="{DynamicResource B.SelectedEdge}" VerticalAlignment="Center">
+                            <TextBlock Text="&#xE8FD;" FontSize="13"
+                                       FontFamily="{DynamicResource F.Icon}"
+                                       Foreground="{DynamicResource B.Accent}"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <TextBlock Grid.Column="1" x:Name="TxtCount"
+                                   Text="Aplicaciones con acceso a internet"
+                                   FontWeight="SemiBold" FontSize="13.5" Margin="10,0,0,0"
+                                   FontFamily="{DynamicResource F.Display}"
+                                   Foreground="{DynamicResource B.Text}"
+                                   VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+
+                        <!-- Refrescar a mano y la ventana de minutos. La lista ya no arrastra el
+                             histórico entero de siempre: enseña las abiertas ahora y las que
+                             pidieron salida dentro de estos minutos, así que el bicho de las
+                             cien filas de programas que cerraron hace semanas desaparece. -->
+                        <Button Grid.Column="2" x:Name="BtnRefrescar"
+                                Style="{StaticResource GhostButton}"
+                                Margin="12,0,0,0" VerticalAlignment="Center" Padding="9,5"
+                                Click="OnRefrescar"
+                                ToolTip="Vuelve a mirar lo que hay abierto ahora y releer tus reglas del firewall">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock x:Name="IconoRefrescar" Text="&#xE72C;"
+                                           FontFamily="{DynamicResource F.Icon}"
+                                           FontSize="12" Margin="0,0,6,0"
+                                           VerticalAlignment="Center"
+                                           RenderTransformOrigin="0.5,0.5">
+                                    <TextBlock.RenderTransform>
+                                        <RotateTransform x:Name="GiroRefrescar" Angle="0"/>
+                                    </TextBlock.RenderTransform>
+                                </TextBlock>
+                                <TextBlock x:Name="TxtRefrescar" Text="Refrescar" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <Slider Grid.Column="3" x:Name="BarraVentana"
+                                Style="{StaticResource BarraVentana}"
+                                Width="132" Margin="12,0,0,0" VerticalAlignment="Center"
+                                ValueChanged="OnVentanaMinutos"
+                                ToolTip="Hasta cuántos minutos atrás cuentan las apps que pidieron salida.&#10;De izquierda a derecha: «en vivo» · 1 min · 5 · 10 · 15 · 30 · 1 h · 2 h · 4 h, y al final «todas».&#10;&#10;Llevándolo hasta el borde de la izquierda se pone «en vivo»: repasa los procesos en cada sondeo y pinta la lista sin aplazamientos, para ver lo que está pasando mientras se mira."
+                                ToolTipService.ShowDuration="20000"/>
+                        <Border Grid.Column="4" x:Name="ChipVentana"
+                                CornerRadius="{DynamicResource R.Field}"
+                                Padding="8,3" Margin="8,0,0,0" VerticalAlignment="Center"
+                                Background="{DynamicResource B.Field}"
+                                BorderBrush="{DynamicResource B.FieldEdge}" BorderThickness="1">
+                            <TextBlock x:Name="TxtVentana" Text="últimos 15 min" FontSize="11.5"
+                                       FontWeight="SemiBold" Foreground="{DynamicResource B.Text}"/>
+                        </Border>
+                        <!-- Colchón fijo entre el chip y el selector de grupo. No es un margen del
+                             chip: un margen no evita el desbordamiento, solo lo empuja. Al ser una
+                             columna Auto con ancho cerrado, el título (que es la columna *) es el
+                             único que puede encogerse, y el hueco se conserva siempre. -->
+                        <Border Grid.Column="5" x:Name="Colchon" Width="22" Background="Transparent"/>
+                    </Grid>
+                    <StackPanel x:Name="CabeceraDer" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <!-- Pestañas de grupo: mis programas y los de Windows por separado.
+                             La pastilla de debajo (SegPill) es un solo elemento que se desliza
+                             de un tramo a otro; el código la mueve con MoveSeg(). -->
+                        <Border x:Name="SegTile" CornerRadius="{DynamicResource R.Field}" Background="{DynamicResource B.Field}"
+                                BorderBrush="{DynamicResource B.FieldEdge}" BorderThickness="1"
+                                Padding="3" Margin="0,0,12,0">
+                            <Grid x:Name="SegHost">
+                                <!-- Sombra: el color del borrado no puede venir de la paleta
+                                     (un Effect congelado no admite DynamicResource), así que va
+                                     escrito aquí y es el único sitio con un literal de color. -->
+                                <Border x:Name="SegPill" CornerRadius="8" Height="26"
+                                        HorizontalAlignment="Left" Width="0" Opacity="0"
+                                        Background="{DynamicResource B.Panel}"
+                                        BorderBrush="{DynamicResource B.Line}" BorderThickness="1">
+                                    <Border.RenderTransform>
+                                        <TranslateTransform x:Name="SegMove" X="0"/>
+                                    </Border.RenderTransform>
+                                    <Border.Effect>
+                                        <DropShadowEffect BlurRadius="7" ShadowDepth="1" Opacity="0.16"
+                                                          Color="#101A22"/>
+                                    </Border.Effect>
+                                </Border>
+                                <StackPanel Orientation="Horizontal">
+                                    <Button x:Name="BtnGroupAll" Style="{StaticResource SegButton}" Content="Todas"
+                                            Click="OnGroupAll"/>
+                                    <Button x:Name="BtnGroupMine" Style="{StaticResource SegButton}"
+                                            Content="Mis apps" Click="OnGroupMine"/>
+                                    <Button x:Name="BtnGroupSystem" Style="{StaticResource SegButton}"
+                                            Content="Del sistema" Click="OnGroupSystem"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- Buscador: el borde toma el color de acento mientras se escribe y la
+                             cruz para borrar solo aparece cuando hay texto. -->
+                        <Border x:Name="SearchHost" Width="228" CornerRadius="{DynamicResource R.Field}"
+                                BorderThickness="1">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="CornerRadius" Value="{DynamicResource R.Field}"/>
+                                    <Setter Property="Background" Value="{DynamicResource B.Field}"/>
+                                    <Setter Property="BorderBrush" Value="{DynamicResource B.FieldEdge}"/>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                            <Setter Property="BorderBrush" Value="{DynamicResource B.FieldFocus}"/>
+                                            <Setter Property="Background" Value="{DynamicResource B.Panel}"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="&#xE721;" FontSize="13" Margin="10,0,0,0"
+                                           IsHitTestVisible="False" VerticalAlignment="Center"
+                                           FontFamily="{DynamicResource F.Icon}"
+                                           Foreground="{DynamicResource B.TextFaint}"/>
+                                <TextBox x:Name="Search" Grid.Column="1" TextChanged="OnSearch"
+                                         BorderThickness="0" Background="Transparent"
+                                         VerticalContentAlignment="Center" Padding="8,7,4,7" FontSize="12.5"
+                                         Foreground="{DynamicResource B.Text}"
+                                         CaretBrush="{DynamicResource B.Accent}"/>
+                                <TextBlock x:Name="SearchHint" Grid.Column="1" Text="Buscar aplicación…"
+                                           FontSize="12.5" IsHitTestVisible="False" Margin="10,0,0,0"
+                                           VerticalAlignment="Center"
+                                           Foreground="{DynamicResource B.TextFaint}"/>
+                                <Button Grid.Column="2" x:Name="BtnClear" Style="{StaticResource ClearButton}"
+                                        Margin="0,0,7,0" VerticalAlignment="Center" Click="OnClearSearch"
+                                        Visibility="Collapsed" ToolTip="Borrar la búsqueda"/>
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Cabecera de columnas: MISMOS anchos que la plantilla de fila, incluido el
+                     hueco del rail, para que las etiquetas caigan sobre su dato. Cada tirador
+                     mueve su columna y el nombre flexible absorbe lo que sobre. -->
+                <Border DockPanel.Dock="Top" Background="{DynamicResource B.PanelAlt}"
+                        BorderBrush="{DynamicResource B.Line}" BorderThickness="0,0,0,1"
+                        CornerRadius="{DynamicResource R.Tile}" Padding="0" x:Name="HeaderBand">
+                    <Grid Margin="3,0,3,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="4"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" Width="3" Margin="1,7" HorizontalAlignment="Left"
+                                CornerRadius="2" Background="{DynamicResource B.AuroraLine}"/>
+                        <Grid Grid.Column="1" Margin="6,4,8,4" x:Name="HeaderGrid">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="24"/>
+                                <ColumnDefinition Width="34"/>
+                                <ColumnDefinition Width="*" MinWidth="140"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="{Binding TrafficCol, Source={x:Static views:ListLayout.Current}}"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="{Binding PesoCol, Source={x:Static views:ListLayout.Current}}"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="{Binding PillCol, Source={x:Static views:ListLayout.Current}}"/>
+                                <ColumnDefinition Width="6"/>
+                                <ColumnDefinition Width="{Binding PillCol, Source={x:Static views:ListLayout.Current}}"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Botón de abrir fila a la altura de la cabecera: al pulsarlo se
+                                 abren o se cierran todas a la vez. Lleva la misma flecha que las
+                                 filas, girada desde el código según estén abiertas, para que el
+                                 mando diga lo que va a hacer cada vez. -->
+                            <Button Grid.Column="0" x:Name="BtnExpandAll" Style="{StaticResource Chevron}"
+                                    HorizontalAlignment="Center" VerticalAlignment="Center"
+                                    Click="OnExpandAll" Content="&#xE70D;"
+                                    RenderTransformOrigin="0.5,0.5"
+                                    ToolTip="Abrir o cerrar el detalle de todas las filas de golpe"
+                                    AutomationProperties.Name="Abrir todas las filas">
+                                <Button.RenderTransform>
+                                    <RotateTransform Angle="0"/>
+                                </Button.RenderTransform>
+                            </Button>
+
+                            <TextBlock Grid.Column="2" Text="APLICACIÓN" Style="{StaticResource ColHeader}"
+                                       Margin="7,0,0,0"/>
+
+                            <!-- Tirador Aplicación|Tráfico: línea fina con margen negativo que
+                                 ensancha la zona sensible a ~16 px para pincharla fácil; al pasar
+                                 el ratón se oscurece. El Tag dice qué columna mueve (OnSplitDown). -->
+                            <Grid x:Name="SplitHandleTraffic" Grid.Column="3" Tag="Traffic"
+                                  Background="Transparent" Cursor="SizeWE" Margin="-7,0,-7,0"
+                                  MouseLeftButtonDown="OnSplitDown" MouseMove="OnSplitMove"
+                                  MouseLeftButtonUp="OnSplitUp"
+                                  ToolTip="Arrastra para ensanchar o estrechar la columna de tráfico">
+                                <Border Width="2" HorizontalAlignment="Center" CornerRadius="1"
+                                        Background="{DynamicResource B.Line}">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsMouseOver, ElementName=SplitHandleTraffic}" Value="True">
+                                                    <Setter Property="Background" Value="{DynamicResource B.Accent}"/>
+                                                    <Setter Property="Width" Value="3"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                </Border>
+                            </Grid>
+
+                            <TextBlock Grid.Column="4" Text="TRÁFICO EN VIVO" Style="{StaticResource ColHeader}"
+                                       HorizontalAlignment="Left" Margin="0,0,8,0"/>
+
+                            <Grid x:Name="SplitHandlePeso" Grid.Column="5" Tag="Peso"
+                                  Background="Transparent" Cursor="SizeWE" Margin="-7,0,-7,0"
+                                  MouseLeftButtonDown="OnSplitDown" MouseMove="OnSplitMove"
+                                  MouseLeftButtonUp="OnSplitUp"
+                                  ToolTip="Arrastra para ensanchar o estrechar la columna de peso">
+                                <Border Width="2" HorizontalAlignment="Center" CornerRadius="1"
+                                        Background="{DynamicResource B.Line}">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsMouseOver, ElementName=SplitHandlePeso}" Value="True">
+                                                    <Setter Property="Background" Value="{DynamicResource B.Accent}"/>
+                                                    <Setter Property="Width" Value="3"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                </Border>
+                            </Grid>
+
+                            <TextBlock Grid.Column="6" Text="PESO" Style="{StaticResource ColHeader}"
+                                       HorizontalAlignment="Center" Padding="6,4"
+                                       ToolTip="Cuánto pesa cada aplicación en el tráfico de ahora mismo, comparada con la que más se mueve de lo que estás viendo.&#10;&#10;No es una escala fija: barra llena = la más pesada de la lista en este momento. Si ésa se calma, las demás se ven más largas aunque no muevan más.&#10;&#10;La cifra exacta está en la columna TRÁFICO EN VIVO."/>
+
+                            <Grid x:Name="SplitHandlePill" Grid.Column="7" Tag="Pill"
+                                  Background="Transparent" Cursor="SizeWE" Margin="-7,0,-7,0"
+                                  MouseLeftButtonDown="OnSplitDown" MouseMove="OnSplitMove"
+                                  MouseLeftButtonUp="OnSplitUp"
+                                  ToolTip="Arrastra para ensanchar o estrechar las pastillas de permiso">
+                                <Border Width="2" HorizontalAlignment="Center" CornerRadius="1"
+                                        Background="{DynamicResource B.Line}">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsMouseOver, ElementName=SplitHandlePill}" Value="True">
+                                                    <Setter Property="Background" Value="{DynamicResource B.Accent}"/>
+                                                    <Setter Property="Width" Value="3"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                </Border>
+                            </Grid>
+
+                            <!-- SALIDA y ENTRADA son botones: cada toque hace un ciclo de tres pasos
+                                 (orden normal, permitidas arriba, bloqueadas arriba). El codigo
+                                 cambia la flecha y el color de MarkOut / MarkIn. -->
+                            <Button Grid.Column="8" x:Name="BtnHdrOut" Style="{StaticResource SortHeader}"
+                                    Click="OnSortOut">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="SALIDA" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="MarkOut" Text="&#x2195;" FontSize="11"
+                                               Margin="5,0,0,0" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Grid.Column="10" x:Name="BtnHdrIn" Style="{StaticResource SortHeader}"
+                                    Click="OnSortIn">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="ENTRADA" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="MarkIn" Text="&#x2195;" FontSize="11"
+                                               Margin="5,0,0,0" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <!-- Lista virtualizada: solo se crean las filas visibles. Con ItemsControl se
+                   construían las 112 de golpe y desplazar costaba. El MinHeight es una red:
+                   si la ventana es muy baja, la lista se recorta antes que desaparecer. -->
+                <ListBox x:Name="AppsList" MinHeight="120"
+                         ItemTemplate="{StaticResource AppRowTemplate}"
+                         ItemContainerStyle="{StaticResource AppRowContainer}"
+                         Background="Transparent" BorderThickness="0" Padding="0,0,0,0" Margin="0,7,0,0"
+                         HorizontalContentAlignment="Stretch"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         ScrollViewer.VerticalScrollBarVisibility="Auto"
+                         VirtualizingPanel.IsVirtualizing="True"
+                         VirtualizingPanel.VirtualizationMode="Recycling"
+                         VirtualizingPanel.ScrollUnit="Pixel"
+                         ScrollViewer.CanContentScroll="True">
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <VirtualizingStackPanel/>
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+                </ListBox>
+            </DockPanel>
+        </Border>
+    </DockPanel>
+</UserControl>

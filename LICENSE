@@ -1,0 +1,39 @@
+MIT License
+
+Copyright (c) 2026 PCJ — Monitor de Red PCJ
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+Resumen en español, no vinculante: puedes usar, copiar, modificar, mezclar, publicar,
+distribuir y vender este código, incluso con ánimo de lucro, sin pedir permiso. Lo único que se
+te pide es mantener este aviso de autoría en las copias o derivadas. El código se entrega tal
+cual, sin garantía de ningún tipo: quien lo usa asume el riesgo, y en particular esto es una
+herramienta que toca el firewall de Windows.
+
+Esta licencia cubre exclusivamente el código de este repositorio: el C#, los XAML, los guiones de
+compilación y los documentos. No cubre los datos de los servicios externos que el programa puede
+consultar de forma opcional —la lista de dominios que publica urlhaus.abuse.ch y las respuestas
+de geolocalización de ip-api—, que son propiedad de sus respectivos proveedores, no son obra de
+PCJ y PCJ no reclama ningún derecho sobre ellos. La licencia MIT no otorga derechos sobre esos
+datos de terceros: quien active esas dos funciones, o quiera republicar o redistribuir cualquiera
+de sus resultados, tiene que respetar las condiciones de uso del servicio correspondiente, que son
+distintas de esta licencia y las fija cada proveedor. Sus términos se resumen en el README,
+sección «Servicios externos».
